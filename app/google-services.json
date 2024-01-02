@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "619384971588",
+    "project_id": "psyched-oarlock-405313",
+    "storage_bucket": "psyched-oarlock-405313.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:619384971588:android:0fc4306c29a5673d3fb711",
+        "android_client_info": {
+          "package_name": "com.pioneers.jobgig"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "619384971588-lnc8ogdgb23ggpguj5gjhsmv7lja6d6i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pioneers.jobgig",
+            "certificate_hash": "0744259eeb7a4b96b71da71c0493c34b85986687"
+          }
+        },
+        {
+          "client_id": "619384971588-315q3tr1658mt05fvuuj5ragrp2s4kk7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCoGkz9vHkO_jrKfwEXJ9yK07jOsosKogg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "619384971588-315q3tr1658mt05fvuuj5ragrp2s4kk7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
