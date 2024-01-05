@@ -1,29 +1,22 @@
 package com.pioneers.jobgig
 
-import android.annotation.SuppressLint
 import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.auth.FirebaseAuth
-import com.pioneers.jobgig.screens.EnrollCourse
-import com.pioneers.jobgig.screens.OnBoardScreens
-import com.pioneers.jobgig.screens.Onboarding
+import com.pioneers.jobgig.screens.Login
+import com.pioneers.jobgig.screens.ScreenNav
 import com.pioneers.jobgig.ui.theme.JobGigTheme
 
 class MainActivity : ComponentActivity() {
@@ -63,15 +56,19 @@ class MainActivity : ComponentActivity() {
 //        Authenticate()
         setContent {
             JobGigTheme {
+                ScreenNav(navHostController = rememberNavController())
+//                Scaffold {
+//                    EnrollCourse(top = it.calculateTopPadding(), bottom = it.calculateBottomPadding(), title = "Learn The Basics About Canon Eos", duration = "12h 45min", ratings = 4.3, studentEnrolled =3598 , numRating =400 )
+//                }
 //                LaunchedEffect(key1 = true){
 //                    Authenticate()
 //                }
                 // A surface container using the 'background' color from the theme
-                Scaffold {
-                    Column(modifier = Modifier.background(color = androidx.compose.ui.graphics.Color.Green)) {
-                        EnrollCourse(it.calculateTopPadding(), it.calculateBottomPadding())
-                    }
-                }
+//                Scaffold {
+//                    Column(modifier = Modifier.background(color = androidx.compose.ui.graphics.Color.Green)) {
+//                        //EnrollCourse(it.calculateTopPadding(), it.calculateBottomPadding())
+//                    }
+//                }
 //                Scaffold(modifier = Modifier.fillMaxSize()) {
 //                    EnrollCourse(top = it.calculateTopPadding(),  bottom = it.calculateBottomPadding())
 //                }
@@ -86,13 +83,4 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
         text = "Hello $name!",
         modifier = modifier
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-
-fun GreetingPreview() {
-    JobGigTheme {
-        Greeting("Android")
-    }
 }

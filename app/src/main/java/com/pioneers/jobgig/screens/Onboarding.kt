@@ -106,7 +106,7 @@ fun Preview(){
     JobGigTheme {
         //val view:MainViewModel= viewModel()
         Scaffold {
-            OnBoardScreens.LoginScreen()
+            //OnBoardScreens.LoginScreen()
         }
     }
 }

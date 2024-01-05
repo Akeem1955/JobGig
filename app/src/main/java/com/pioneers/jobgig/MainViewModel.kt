@@ -27,7 +27,6 @@ import kotlinx.coroutines.tasks.await
 import java.util.concurrent.TimeUnit
 
 class MainViewModel: ViewModel() {
-
     private var auth = Firebase.auth
     var email by mutableStateOf("")
     var password by mutableStateOf("")
