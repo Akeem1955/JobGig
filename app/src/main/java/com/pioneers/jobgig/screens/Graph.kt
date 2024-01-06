@@ -1,7 +1,11 @@
 package com.pioneers.jobgig.screens
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NamedNavArgument
@@ -12,6 +16,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import com.pioneers.jobgig.viewmodels.OnBoardViewModel
 
 @Composable
@@ -37,6 +45,13 @@ fun ScreenNav(navHostController: NavHostController){
 
 
 
+        }
+        navigation(startDestination = ScreenRoute.Home.route, route = ScreenRoute.Main.route ){
+            composable(route = ScreenRoute.Home.route){
+                Box {
+                    Text(text = "Hello ${FirebaseAuth.getInstance().currentUser?.displayName} \n Email:${Firebase.auth.currentUser?.email}", modifier = Modifier.align(Alignment.Center))
+                }
+            }
         }
     }
 }

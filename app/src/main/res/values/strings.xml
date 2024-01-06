@@ -3,9 +3,8 @@
     <string name="get_started">Get Started</string>
     <string name="get_startedspeech">Its Not Just A Job Search Its A Partnership In Progress </string>
     <string name="get_startedspeech2">Connecting skilled professionals with  opportunities and helping businesses find the perfect match.</string>
-
-
-
+    <string name="email_verify">To complete the registration process and verify your account, we have sent a verification email to the address you provided. Please check your inbox, and if you don\'t see the email, kindly check your spam or junk folder. Click on the verification link in the email to activate your account.</string>
+    <string name="email_verify_login">Activate Your Account to Log In Looks like you are eager to dive into JobGig\nTo get started, just one quick step  activate your account by clicking the verification link we sent to your email.\nCannot find it? Check your spam folder, sometimes it plays hide and seek there.</string>
     <string name="clientid">619384971588-lnc8ogdgb23ggpguj5gjhsmv7lja6d6i.apps.googleusercontent.com</string>
     <string name="CAMERA">Granting camera access enhances communication on our platform, allowing you to visually share job details, receive accurate quotations, and verify completed work. This ensures a more efficient and transparent experience between you and Other User. Rest assured, we prioritize your privacy, and camera access is solely used for improving the service\'s effectiveness</string>
     <string name="RECORD_AUDIO">We\'re dedicated to providing you with a seamless and effective experience on our platform. To enhance communication between you and the user, we request permission to access your device\'s microphone.</string>

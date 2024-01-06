@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -19,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.Button
@@ -32,6 +34,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -40,6 +43,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -54,9 +58,29 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import com.google.firebase.FirebaseApp
 import com.pioneers.jobgig.R
 import com.pioneers.jobgig.ui.theme.JobGigTheme
 import com.pioneers.jobgig.viewmodels.OnBoardViewModel
+
+
+
+
+@Composable
+fun VerifyEmail(viewmodel:OnBoardViewModel, id:String){
+    Surface(color = MaterialTheme.colorScheme.surfaceVariant ,shape = MaterialTheme.shapes.medium,modifier = Modifier
+        .width(300.dp)
+        .height(350.dp)) {
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(10.dp)) {
+            Text(text = id)
+            Button(onClick = {viewmodel.shouldShowEmailVerifyLogin = false;viewmodel.shouldShowEmailVerifySignUp=false}) {
+                Text(text = "Cancel")
+            }
+        }
+    }
+}
 
 @Composable
 fun GettingStarted(navHostController: NavHostController){
@@ -109,19 +133,26 @@ fun GettingStarted(navHostController: NavHostController){
 
 @Composable
 fun Login(modifier: Modifier, viewModel: OnBoardViewModel, navController: NavController?){
-
     val passwordVisibility = remember {
         mutableStateOf(false)
     }
+    LaunchedEffect(key1 = viewModel.sucess){
+        if(viewModel.sucess){
+            navController?.navigate(route = ScreenRoute.Main.route){popUpTo(route = ScreenRoute.Auth.route){inclusive=true} }
+        }
+    }
     val passwordIcon = if (passwordVisibility.value) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff
     val visualTransformation = if (passwordVisibility.value) VisualTransformation.None else PasswordVisualTransformation()
-
-
    if (viewModel._isLoading){
        Dialog(onDismissRequest = {}) {
            CircularProgressIndicator()
        }
    }
+    if(viewModel.shouldShowEmailVerifyLogin){
+        Dialog(onDismissRequest = {}) {
+            VerifyEmail(viewModel, stringResource(id = R.string.email_verify_login))
+        }
+    }
     Box(modifier = modifier) {
         Surface(modifier = Modifier
             .fillMaxWidth()
@@ -151,7 +182,7 @@ fun Login(modifier: Modifier, viewModel: OnBoardViewModel, navController: NavCon
                 .verticalScroll(state = rememberScrollState())
                 .padding(vertical = 32.dp)  ,verticalArrangement = Arrangement.spacedBy(16.dp),horizontalAlignment = Alignment.CenterHorizontally) {
                 Spacer(modifier = Modifier.height(100.dp))
-                TextField(value = viewModel._email,
+                TextField(modifier = Modifier.padding(horizontal = 16.dp) ,value = viewModel._email,
                     onValueChange = {changed->viewModel.updateEmail(changed)},
                     leadingIcon = { Icon(imageVector = Icons.Rounded.Email, contentDescription = "") },
                     label = { Text(text = "Email") },
@@ -159,7 +190,7 @@ fun Login(modifier: Modifier, viewModel: OnBoardViewModel, navController: NavCon
                     isError = viewModel._isError,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     placeholder = { Text(text = "Email") })
-                TextField(value = viewModel._password,
+                TextField(modifier = Modifier.padding(horizontal = 16.dp) ,value = viewModel._password,
                     onValueChange = {update ->viewModel.updatePassword(update)},
                     trailingIcon = { IconButton(onClick = {passwordVisibility.value = !passwordVisibility.value}) {
                         Icon(imageVector = passwordIcon, contentDescription = "") }
@@ -171,11 +202,11 @@ fun Login(modifier: Modifier, viewModel: OnBoardViewModel, navController: NavCon
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     placeholder = { Text(text = "Password") })
                 Text(text = "Forgot Password?", color = colorResource(id = R.color.btn), fontWeight = FontWeight.Bold,modifier = Modifier
-                    .clickable { navController?.navigate(route = ScreenRoute.ForgetPassword.route) }
+                    .clickable { viewModel.clearInfos();navController?.navigate(route = ScreenRoute.ForgetPassword.route) }
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp), textAlign = TextAlign.End)
                 Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = { viewModel.reset()},
+                Button(onClick = { viewModel.login()},
                     colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.btn)),
                     modifier = Modifier.fillMaxWidth(0.7f),
                     shape = MaterialTheme.shapes.small) {
@@ -183,7 +214,7 @@ fun Login(modifier: Modifier, viewModel: OnBoardViewModel, navController: NavCon
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(text = "Don't have an account?", fontWeight = FontWeight.Bold, fontSize = MaterialTheme.typography.labelMedium.fontSize)
-                    Text(modifier = Modifier.clickable { navController?.navigate(route = ScreenRoute.Signup.route) } ,text = "Sign Up", fontWeight = FontWeight.Bold, fontSize = MaterialTheme.typography.labelMedium.fontSize, color = Color.Green)
+                    Text(modifier = Modifier.clickable {viewModel.clearInfos() ;navController?.navigate(route = ScreenRoute.Signup.route) } ,text = "Sign Up", fontWeight = FontWeight.Bold, fontSize = MaterialTheme.typography.labelMedium.fontSize, color = Color.Green)
                 }
             }
         }
@@ -212,10 +243,24 @@ fun Signup(modifier: Modifier, viewModel: OnBoardViewModel,  navController: NavC
     val passwordVisibility = remember {
         mutableStateOf(false)
     }
+    LaunchedEffect(key1 = viewModel.sucessB){
+        if(viewModel.sucessB){
+            navController?.navigate(route = ScreenRoute.Main.route){popUpTo(route = ScreenRoute.Auth.route){inclusive=true} }
+        }
+    }
     val passwordIcon = if (passwordVisibility.value) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff
     val visualTransformation = if (passwordVisibility.value) VisualTransformation.None else PasswordVisualTransformation()
-
-
+    if (viewModel._isLoading){
+        Dialog(onDismissRequest = {}) {
+            CircularProgressIndicator()
+        }
+    }
+    if(viewModel.shouldShowEmailVerifySignUp){
+        Dialog(onDismissRequest = { /**/ }) {
+            VerifyEmail(viewmodel = viewModel, id = stringResource(id = R.string.email_verify))
+        }
+    }
+   
     Box(modifier = modifier) {
         Surface(modifier = Modifier
             .fillMaxWidth()
@@ -245,30 +290,32 @@ fun Signup(modifier: Modifier, viewModel: OnBoardViewModel,  navController: NavC
                 .verticalScroll(state = rememberScrollState())
                 .padding(vertical = 32.dp)  ,verticalArrangement = Arrangement.spacedBy(16.dp),horizontalAlignment = Alignment.CenterHorizontally) {
                 Spacer(modifier = Modifier.height(100.dp))
-                TextField(value = "",
-                    onValueChange = {},
+                TextField(modifier = Modifier.padding(horizontal = 16.dp) ,value = viewModel._fullname,
+                    onValueChange = {update->viewModel.updateFullname(update)},
                     leadingIcon = { Icon(imageVector = Icons.Rounded.Person, contentDescription = "") },
                     label = { Text(text = "FullName") },
-                    supportingText = { Text(text = "") },
                     placeholder = { Text(text = "FullName...") })
-                TextField(value = "",
-                    onValueChange = {},
+                TextField(modifier = Modifier.padding(horizontal = 16.dp) ,value = viewModel._email,
+                    onValueChange = {update->viewModel.updateEmail(update)},
                     leadingIcon = { Icon(imageVector = Icons.Rounded.Email, contentDescription = "") },
                     label = { Text(text = "Email") },
-                    supportingText = { Text(text = "") },
+                    isError = viewModel._isErrorP,
+                    supportingText = { Text(text = viewModel._errorEmail) },
                     placeholder = { Text(text = "Email") })
-                TextField(value = "",
-                    onValueChange = {},
+                TextField(modifier = Modifier.padding(horizontal = 16.dp) ,value = viewModel._password,
+                    onValueChange = {update->viewModel.updatePassword(update)},
                     trailingIcon = { IconButton(onClick = {passwordVisibility.value = !passwordVisibility.value}) {
                         Icon(imageVector = passwordIcon, contentDescription = "")
                     }
                     },
+                    supportingText={Text(text=viewModel._errorPassword)},
+                    isError = viewModel._isErrorP,
                     label = { Text(text = "Password") },
                     visualTransformation = visualTransformation,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     placeholder = { Text(text = "Password") })
                 Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = { /*TODO*/ },
+                Button(onClick = { viewModel.signup() },
                     colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.btn)),
                     modifier = Modifier.fillMaxWidth(0.7f),
                     shape = MaterialTheme.shapes.small) {
@@ -291,6 +338,10 @@ fun SignUpScreen(viewModel: OnBoardViewModel, navController: NavController?){
             Signup(navController = navController,viewModel = viewModel,modifier = Modifier
                 .fillMaxSize()
                 .padding(top = it.calculateTopPadding() + 50.dp))
+            IconButton(modifier = Modifier.padding(top = it.calculateTopPadding()) ,onClick = { navController?.popBackStack()}) {
+                Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "", tint = Color.White)
+            }
+
         }
     }
 
@@ -308,6 +359,7 @@ fun ResetPassword(modifier: Modifier, viewModel: OnBoardViewModel,  navControlle
     val passwordIconConfirm = if (passwordVisibilityConfirm.value) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff
     val visualTransformation = if (passwordVisibility.value) VisualTransformation.None else PasswordVisualTransformation()
     val visualTransformationConfirm = if (passwordVisibilityConfirm.value) VisualTransformation.None else PasswordVisualTransformation()
+
 
 
     Box(modifier = modifier) {
@@ -339,13 +391,13 @@ fun ResetPassword(modifier: Modifier, viewModel: OnBoardViewModel,  navControlle
                 .verticalScroll(state = rememberScrollState())
                 .padding(vertical = 32.dp)  ,verticalArrangement = Arrangement.spacedBy(16.dp),horizontalAlignment = Alignment.CenterHorizontally) {
                 Spacer(modifier = Modifier.height(100.dp))
-                TextField(value = "",
+                TextField(modifier = Modifier.padding(horizontal = 16.dp)  ,value = "",
                     onValueChange = {},
                     leadingIcon = { Icon(imageVector = Icons.Rounded.Email, contentDescription = "") },
                     label = { Text(text = "Email") },
                     supportingText = { Text(text = "") },
                     placeholder = { Text(text = "Email") })
-                TextField(value = "",
+                TextField(modifier = Modifier.padding(horizontal = 16.dp) ,value = "",
                     onValueChange = {},
                     trailingIcon = { IconButton(onClick = {passwordVisibility.value = !passwordVisibility.value}) {
                         Icon(imageVector = passwordIcon, contentDescription = "")
@@ -355,7 +407,7 @@ fun ResetPassword(modifier: Modifier, viewModel: OnBoardViewModel,  navControlle
                     visualTransformation = visualTransformation,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     placeholder = { Text(text = "New Password") })
-                TextField(value = "",
+                TextField(modifier = Modifier.padding(horizontal = 16.dp) ,value = "",
                     onValueChange = {},
                     trailingIcon = { IconButton(onClick = {passwordVisibilityConfirm.value = !passwordVisibilityConfirm.value}) {
                         Icon(imageVector = passwordIconConfirm, contentDescription = "")
@@ -385,6 +437,9 @@ fun ResetPassword(modifier: Modifier, viewModel: OnBoardViewModel,  navControlle
 @Composable
 fun ResetPasswordScreen(viewModel: OnBoardViewModel, navController: NavController?){
     Scaffold {
+        val btnback = remember {
+            mutableStateOf(true)
+        }
         Box(modifier = Modifier.background(color = colorResource(id = R.color.white))) {
             Box(modifier = Modifier
                 .background(color = colorResource(id = R.color.btn))
@@ -394,9 +449,14 @@ fun ResetPasswordScreen(viewModel: OnBoardViewModel, navController: NavControlle
             ResetPassword(navController = navController,viewModel = viewModel,modifier = Modifier
                 .fillMaxSize()
                 .padding(top = it.calculateTopPadding() + 50.dp))
+            IconButton(modifier = Modifier.padding(top = it.calculateTopPadding()) ,onClick = { if(btnback.value)navController?.popBackStack();btnback.value=false}) {
+                Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "", tint = Color.White)
+            }
         }
     }
 }
+
+
 
 
 

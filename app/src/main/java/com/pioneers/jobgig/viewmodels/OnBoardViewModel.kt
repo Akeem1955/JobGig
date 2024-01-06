@@ -5,8 +5,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.pioneers.jobgig.dataobj.User
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -19,6 +22,14 @@ class OnBoardViewModel:ViewModel() {
     private var isError by mutableStateOf(false)
     private var isErrorP by mutableStateOf(false)
     private var isLoading by mutableStateOf(false)
+    var shouldShowEmailVerifyLogin by mutableStateOf(false)
+    var shouldShowEmailVerifySignUp by mutableStateOf(false)
+    var sucess by mutableStateOf(false)
+        private set
+    var sucessB by mutableStateOf(false)
+        private set
+    var sucessC by mutableStateOf(false)
+        private set
 
 
     val _email
@@ -43,6 +54,16 @@ class OnBoardViewModel:ViewModel() {
         isError = false
         email = update
     }
+    fun clearInfos(){
+        email = ""
+        password = ""
+        errorEmail =""
+        errorPassword =""
+        isError = false
+        isErrorP = false
+        isLoading = false
+
+    }
     fun updatePassword(update: String){
         errorPassword = ""
         isErrorP = false
@@ -58,26 +79,54 @@ class OnBoardViewModel:ViewModel() {
 
 
     fun login(){
+        isLoading = true
         viewModelScope.launch {
             try {
                 val result =Firebase.auth.signInWithEmailAndPassword(email, password).await()
+                println("we reach here")
                 val user = result.user
                 if(user?.isEmailVerified == false){
                     user.sendEmailVerification()
+                    isLoading = false
+                    shouldShowEmailVerifyLogin = true
+                }else{
+                    sucess = true
                 }
             }catch (e:Exception){
+                isError = true
+                errorEmail = e.message ?:""
                 println(e.message)
             }
         }
     }
 
     fun signup(){
+        val reg:Regex = Regex("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@#$]).{8,}$")
+        if(!password.matches(reg)){
+            errorPassword = "Password Must Contain Uppercase, Number , and Special charcater(@#$)"
+            isErrorP = true
+            return
+        }
+        isLoading = true
         viewModelScope.launch {
+            var user: FirebaseUser? = null
             try {
                 val result =Firebase.auth.createUserWithEmailAndPassword(email, password).await()
-                val user = result.user
+                user = result.user
                 if(user?.isEmailVerified == false){
                     user.sendEmailVerification()
+                    isLoading = false
+                    shouldShowEmailVerifySignUp = true
+                }
+            }catch (e:Exception){
+                isLoading = false
+                isError = true
+                errorEmail = e.message ?:""
+            }
+            try {
+                val userObj =User(null,0.0,null,false, emptyList(), emptyList(), emptyList(),false,null)
+                if (user != null) {
+                    Firebase.firestore.collection("Users").document(user.uid).set(userObj).await()
                 }
             }catch (e:Exception){
                 println(e.message)
@@ -88,7 +137,9 @@ class OnBoardViewModel:ViewModel() {
         viewModelScope.launch {
             try {
                 Firebase.auth.sendPasswordResetEmail("adetunjiazeem2004@gmail.com").await()
-            }catch (e:Exception){}
+            }catch (e:Exception){
+                println(e.message)
+            }
         }
     }
 

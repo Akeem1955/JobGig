@@ -5,6 +5,8 @@ sealed class ScreenRoute(var route: String){
     object  Login: ScreenRoute("login")
     object  ForgetPassword: ScreenRoute("forget_password")
     object  Signup: ScreenRoute("signup")
-    object Auth:ScreenRoute("auth")
+    object  Auth:ScreenRoute("auth")
+    object  Home:ScreenRoute("home")
+    object  Main:ScreenRoute("main")
 
 }
