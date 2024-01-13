@@ -472,12 +472,3 @@ fun ResetPasswordScreen(viewModel: OnBoardViewModel, navController: NavControlle
 
 
 
-
-@Preview(showBackground = true)
-@Composable
-
-fun GreetingPreview() {
-    JobGigTheme {
-        Login(modifier = Modifier, viewModel = viewModel(), navController = null)
-    }
-}

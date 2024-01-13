@@ -8,12 +8,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 class VideoPlayViewModel(private val saveState:SavedStateHandle):ViewModel() {
-    private var uris = saveState.getStateFlow("uris", emptyList<Uri>())
+    private var uris = MutableStateFlow<List<Uri>>(emptyList())
     private var mediaItems = uris.map { uris ->
         uris.map {uri ->
             MediaItem.fromUri(uri)

@@ -1,5 +1,6 @@
 package com.pioneers.jobgig.screens
 
+
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -8,68 +9,44 @@ import android.provider.Settings
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-
-
-
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.StarRate
-import androidx.compose.material.icons.outlined.AccountCircle
-import androidx.compose.material.icons.outlined.Email
-import androidx.compose.material.icons.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.rounded.AccessTime
-import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.ArrowForwardIos
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Circle
 import androidx.compose.material.icons.rounded.StarHalf
 import androidx.compose.material.icons.rounded.StarRate
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -93,22 +70,20 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -118,7 +93,6 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.accompanist.permissions.shouldShowRationale
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -134,10 +108,11 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.pioneers.jobgig.R
-import com.pioneers.jobgig.dataobj.utils.InstructorDesignData
+import com.pioneers.jobgig.dataobj.utils.CourseContent
 import com.pioneers.jobgig.sealed.CourseContentDesign
 import com.pioneers.jobgig.sealed.CourseInfoDesign
 import com.pioneers.jobgig.ui.theme.JobGigTheme
+import com.pioneers.jobgig.viewmodels.CourseViewModel
 import com.pioneers.jobgig.viewmodels.MapViewModel
 import com.pioneers.jobgig.viewmodels.VideoPlayViewModel
 import kotlinx.coroutines.delay
@@ -149,6 +124,7 @@ fun CourseInfo(
     title: String,
     content:CourseContentDesign,
     infoType:CourseInfoDesign,
+    navController: NavController,
     contentType:CourseContentDesign){
     Column {
         Text(text =title,Modifier.padding(start = 12.dp, bottom = 10.dp, end = 8.dp))
@@ -281,7 +257,7 @@ fun CourseInfo(
                 val contentItem = content as CourseContentDesign.InstructorDesign
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                   contentItem.items.forEach {item->
-                      InstructorDesign(data = item.res, name =item.name , description =item.description)
+                      InstructorDesign(uri = item.uri, name =item.name , description =item.description, navController =navController )
                   }
                 }
             }
@@ -294,12 +270,13 @@ fun CourseInfo(
 
 
 
+
 @Composable
-fun InstructorDesign(data:Any, name: String, description:String){
+fun InstructorDesign(uri:String, name: String, description:String,navController: NavController){
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         Spacer(modifier = Modifier.width(6.dp))
         AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current).data(data = data).build(),
+            model = ImageRequest.Builder(LocalContext.current).data(data = uri).error(R.drawable.round_image_24).build(),
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .clip(CircleShape)
@@ -310,7 +287,7 @@ fun InstructorDesign(data:Any, name: String, description:String){
             Text(text = name)
             Text(text = description)
         }
-        IconButton(onClick = { /*TODO*/ }) {
+        IconButton(onClick = {navController.navigate(route = ScreenRoute.InstructorDetailLScreenRoute.addUri(uri))}) {
             Icon(imageVector = Icons.Rounded.ArrowForwardIos, contentDescription = "")
         }
     }
@@ -319,193 +296,8 @@ fun InstructorDesign(data:Any, name: String, description:String){
 
 
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun Logins(){
-    Box(modifier = Modifier.fillMaxSize()) {
-        Surface(modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp),
-            color = colorResource(id = R.color.btn),
-            shape = MaterialTheme.shapes.extraLarge
-        )
-        {
-            Text(text = "Log in", fontStyle = MaterialTheme.typography.bodyMedium.fontStyle,
-                color = colorResource(id = R.color.white),
-                modifier = Modifier
-                    .wrapContentWidth()
-                    .wrapContentHeight()
-                    .align(alignment = Alignment.Center)
-            )
-        }
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 80.dp),
-            shape = RoundedCornerShape(topStartPercent = 10, topEndPercent = 10)) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Spacer(modifier = Modifier.fillMaxHeight(0.15f))
-                OutlinedTextField(value = "",
-                    onValueChange = {},
-                    leadingIcon = { Icon(imageVector = Icons.Outlined.Email, contentDescription = "")},
-                    supportingText = { Text(text = "")},
-                    placeholder = { Text(text = "Email")})
-                Spacer(modifier = Modifier.height(10.dp))
-                OutlinedTextField(value = "",
-                    onValueChange = {},
-                    trailingIcon = { Icon(painter = painterResource(id = R.drawable.outline_visibility_off_24), contentDescription = ""
-                    )},
-                    placeholder = { Text(text = "Password")})
-                Text(text = "Forgot Password?")
-                Spacer(modifier = Modifier.fillMaxHeight(0.15f))
-                Button(onClick = { /*TODO*/ },
-                    colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.btn)),
-                    modifier = Modifier.fillMaxWidth(0.7f),
-                    shape = MaterialTheme.shapes.small) {
-                    Text(text = "Login")
-                }
-                Text(text = "Don't have an account? Sign in")
-            }
-        }
-    }
-}
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SignUp(){
-    Box(modifier = Modifier.fillMaxSize()) {
-        Surface(modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp),
-            color = colorResource(id = R.color.btn),
-            shape = MaterialTheme.shapes.extraLarge
-        ) {
-            Text(text = "Log in", fontStyle = MaterialTheme.typography.bodyMedium.fontStyle,
-                color = colorResource(id = R.color.white),
-                modifier = Modifier
-                    .wrapContentWidth()
-                    .wrapContentHeight()
-                    .align(alignment = Alignment.Center)
-            )
-        }
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 80.dp),
-            shape = RoundedCornerShape(topStartPercent = 10, topEndPercent = 10)) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Spacer(modifier = Modifier.fillMaxHeight(0.15f))
-
-                //full name
-                OutlinedTextField(value = "",
-                    onValueChange = {},
-                    leadingIcon = { Icon(imageVector = Icons.Outlined.AccountCircle, contentDescription = ""
-                    )},
-                    placeholder = { Text(text = "Fullname")})
-
-                //email
-                OutlinedTextField(value = "",
-                    onValueChange = {},
-                    leadingIcon = { Icon(imageVector = Icons.Outlined.Person, contentDescription = "")},
-                    supportingText = { Text(text = "")},
-                    placeholder = { Text(text = "Email")})
-
-                //password
-                Spacer(modifier = Modifier.height(10.dp))
 
 
-                OutlinedTextField(value = "",
-                    onValueChange = {},
-                    trailingIcon = { Icon(painter = painterResource(id = R.drawable.outline_visibility_off_24), contentDescription = ""
-                    )},
-                    placeholder = { Text(text = "Password")})
-
-
-                Spacer(modifier = Modifier.fillMaxHeight(0.15f))
-
-
-                Button(onClick = { /*TODO*/ },
-                    colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.btn)),
-                    modifier = Modifier.fillMaxWidth(0.7f),
-                    shape = MaterialTheme.shapes.small) {
-                    Text(text = "Login")
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                Button(onClick = { /*TODO*/ },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                    modifier = Modifier.fillMaxWidth(0.7f),
-                    shape = MaterialTheme.shapes.small) {
-                    Text(text = "Login With Google", color = Color.Gray)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun HomeCardView(){
-    Box(modifier = Modifier.fillMaxSize()) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .height(200.dp)
-                .padding(horizontal = 8.dp, vertical = 16.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            shape = MaterialTheme.shapes.medium) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Image(
-                        painter = painterResource(id = R.drawable.cow),
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(CircleShape),
-                        contentDescription ="" )
-                    Spacer(modifier = Modifier
-                        .weight(3f)
-                        .height(90.dp))
-                    Icon(tint= MaterialTheme.colorScheme.surfaceTint,imageVector = Icons.Outlined.KeyboardArrowRight, contentDescription ="" , modifier = Modifier
-                        .padding(end = 8.dp)
-                        .size(34.dp, 24.dp))
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(modifier = Modifier.padding(start = 16.dp),text = "Searching For Jobs ?", fontSize = MaterialTheme.typography.titleLarge .fontSize, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(modifier = Modifier.padding(start = 16.dp),text = "Submit Your Info and get a gig")
-            }
-        }
-    }
-}
-
-@Composable
-fun LazyGrids(item:String){
-    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceVariant) {
-        Text(text = item, modifier = Modifier
-            .padding(16.dp)
-            .wrapContentSize())
-    }
-}
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun FlowS(){
-    var scrollState = rememberScrollState()
-    var items = listOf<String>("Catering Services is here","Plumber","Elephant","Engineering","Electrician","Headdress", "Fashion Designer","Catering Services is here","Plumber","Elephant","Engineering","Electrician","Headdress", "Fashion Designer","Catering Services is here","Plumber","Elephant","Engineering","Electrician","Headdress", "Fashion Designer","Catering Services is here","Plumber","Elephant","Engineering","Electrician","Headdress", "Fashion Designer","Catering Services is here","Plumber","Elephant","Engineering","Electrician","Headdress", "Fashion Designer","Catering Services is here","Plumber","Elephant","Engineering","Electrician","Headdress", "Fashion Designer","Catering Services is here","Plumber","Elephant","Engineering","Electrician","Headdress", "Fashion Designer")
-    FlowRow(verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(start = 8.dp, top = 8.dp, bottom = 8.dp)
-            .verticalScroll(state = scrollState)) {
-        items.forEach { item->
-            LazyGrids(item = item)
-        }
-    }
-}
-
-@Composable
-fun EmployeeDetails(){
-
-}
 @Composable
 fun AboutMe(aboutMe:String, title:String){
     Column {
@@ -519,6 +311,9 @@ fun AboutMe(aboutMe:String, title:String){
     }
 
 }
+
+
+
 
 
 @Composable
@@ -564,15 +359,12 @@ fun VideoAboutMyWork(uri: Uri?){
     }
     LaunchedEffect(key1 = true){
         if (uri != null){
+            player.setMediaItems(emptyList())
             player.setMediaItem(MediaItem.fromUri(uri))
             player.seekTo(videoDuration)
             player.prepare()
         }
     }
-
-
-
-
 
     Surface(shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surfaceVariant,
@@ -584,6 +376,11 @@ fun VideoAboutMyWork(uri: Uri?){
             .padding(horizontal = 8.dp), player = player, lifecycle = lifecycle)
     }
 }
+
+
+
+
+
 @Composable
 fun VideoPlayer(modifier: Modifier, player:ExoPlayer, lifecycle: Lifecycle.Event){
     AndroidView(factory = { ctx ->PlayerView(ctx).also { it.player = player }},
@@ -597,13 +394,18 @@ fun VideoPlayer(modifier: Modifier, player:ExoPlayer, lifecycle: Lifecycle.Event
         }
     )
 }
+
+
+
+
+
 @Composable
-fun TopCategoryItem(category:String){
+fun TopCategoryItems(category:String){
     Surface(shape = MaterialTheme.shapes.medium, modifier = Modifier.width(100.dp), color = MaterialTheme.colorScheme.primary) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(modifier = Modifier
                 .padding(vertical = 16.dp, horizontal = 16.dp)) {
-                AsyncImage(model = ImageRequest.Builder(LocalContext.current).data(R.drawable.hen).build(),
+                AsyncImage(model = ImageRequest.Builder(LocalContext.current).data(R.drawable.round_account_circle_24).build(),
                     contentDescription ="",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -614,6 +416,10 @@ fun TopCategoryItem(category:String){
         }
     }
 }
+
+
+
+
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun DisplayRationale(permisionState:MultiplePermissionsState, rationale:List<String>){
@@ -646,16 +452,10 @@ fun DisplayRationale(permisionState:MultiplePermissionsState, rationale:List<Str
     }
 }
 
-@Composable
-fun PopularCourseCard(){
-    Column(modifier = Modifier.width(200.dp)) {
-        Surface(color = MaterialTheme.colorScheme.surfaceVariant ,shape = MaterialTheme.shapes.small, modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp)) {
 
-        }
-    }
-}
+
+
+
 @Composable
 fun Duration(duration: String){
     Row(verticalAlignment = Alignment.CenterVertically ,horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -663,6 +463,11 @@ fun Duration(duration: String){
         Text(text = duration, fontSize = MaterialTheme.typography.labelSmall.fontSize, color = MaterialTheme.colorScheme.surfaceTint)
     }
 }
+
+
+
+
+
 @Composable
 fun  CourseIntroRate(title: String, duration: String, ratings: Double, studentEnrolled:Int, numRating:Int){
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -681,114 +486,40 @@ fun  CourseIntroRate(title: String, duration: String, ratings: Double, studentEn
     }
 }
 
-@Composable
-fun EnrollCourse(top:Dp, bottom:Dp, title: String, duration: String, ratings: Double, studentEnrolled: Int,numRating: Int){
-    Box(modifier = Modifier.fillMaxSize()) {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current).data(R.drawable.hen).build(),
-            contentDescription = "",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(alignment = Alignment.TopCenter)
-                .fillMaxHeight(0.4f))
-        Surface(
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.7f)
-                .align(Alignment.BottomCenter),
-            shape = RoundedCornerShape(topStartPercent = 10, topEndPercent = 10)) {
-           Column(modifier = Modifier
-               .fillMaxSize()
-               .padding(bottom = bottom)) {
-               LazyColumn(state = rememberLazyListState(), modifier= Modifier
-                   .padding(start = 16.dp, end = 16.dp, bottom = bottom)
-                   .weight(1f, true)){
-                   item {
-                       CourseIntroRate(
-                           title = title,
-                           duration = duration,
-                           ratings = ratings,
-                           studentEnrolled = studentEnrolled ,
-                           numRating = numRating
-                       )
-                   }
-                   item {
-                      val item = listOf("How To Operate The Camera", "Basics use of CameraX", "How To Find The Perfect Scene", "Finding The right Angle", "Summary And Bonus")
-                       CourseInfo(title = "What You will Learn", content = CourseContentDesign.ListDesign(item), infoType = CourseInfoDesign.CheckDesign, contentType =CourseContentDesign.Items )
-                   }
-                   item {
-                       val items = listOf<String>("A Camera", "Dedicated MindSet", "Must Radicalized", "Taught In Yoruba Language", "Passion")
-                       CourseInfo(title = "Requirements", content = CourseContentDesign.ListDesign(items), infoType = CourseInfoDesign.BulletDesign, contentType =CourseContentDesign.Items )
-                   }
-                   item {
-                       val item = stringResource(id = R.string.get_startedspeech)
-                       CourseInfo(title = "Description", content = CourseContentDesign.TextDesign(item), infoType = CourseInfoDesign.CheckDesign, contentType =CourseContentDesign.Single)
 
-                   }
-                   item {
-                       val instruct = listOf<InstructorDesignData>(InstructorDesignData(name = "Adetunji Akeem", description = "An Experience Photographer With 20 years of experience", res = R.drawable.cat, uri = null),InstructorDesignData(name = "Adetunji Azeem Iku", description = "A Experience Image Editor With 5 years of experience", res = R.drawable.cow, uri = null))
-                       CourseInfo(title = "Instructor", content = CourseContentDesign.InstructorDesign(instruct), infoType = CourseInfoDesign.InstructorDesign, contentType =CourseContentDesign.Instructor )
-                   }
-               }
-               Surface(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.background) {
-                   Row(modifier = Modifier.padding(4.dp),verticalAlignment = Alignment.CenterVertically) {
-                       Text(text = "Free", modifier = Modifier
-                           .weight(1f, true)
-                           .background(color = MaterialTheme.colorScheme.background), textAlign = TextAlign.Center, fontSize = MaterialTheme.typography.bodyLarge.fontSize, fontWeight = FontWeight.ExtraBold)
-                       Text(color = Color.White,text = "Enroll Now", modifier = Modifier
-                           .background(color = Color.Magenta)
-                           .weight(2f, true)
-                           .padding(12.dp), textAlign = TextAlign.Center)
-                   }
-               }
-           }
-        }
-        IconButton(onClick = { /*TODO*/ }, modifier = Modifier.statusBarsPadding()) {
-            Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "")
-        }
-    }
-}
+
+
+
+
+
+
+
+
 
 @Composable
-fun EnrolledScreen(){
-    Column(modifier = Modifier.padding(12.dp)) {
-        IconButton(onClick = { /*TODO*/ }) {
-            Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "", tint = MaterialTheme.colorScheme.onBackground)
-        }
-        Row(modifier = Modifier.heightIn(max = 120.dp),horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            AsyncImage(modifier = Modifier.weight(1f,true),model = ImageRequest.Builder(LocalContext.current).data(R.drawable.hen).build(), contentDescription = "")
-
-            Column(modifier = Modifier.weight(2f,true) ,verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(text = "You are now enrolled in:")
-                Text(text = "Python For Intermediate Learners")
-                Text(text = "Peter, james")
-            }
-        }
-        ElevatedButton(shape = MaterialTheme.shapes.small,modifier = Modifier.fillMaxWidth(),onClick = { /*TODO*/ }) {
-            Text(text = "Get Started")
-        }
-    }
-}
-@Composable
-fun CourseVideoItem(){
-    Row(verticalAlignment = Alignment.CenterVertically ,horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(text = "1")
+fun CourseVideoItem(content:CourseContent, pos:Int, viewModel: CourseViewModel){
+    Row(modifier = Modifier.clickable {viewModel.playVideo(pos) } ,verticalAlignment = Alignment.CenterVertically ,horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(text = "$pos")
         Column(verticalArrangement = Arrangement.spacedBy(4.dp),modifier = Modifier.weight(1f)) {
-            Text(overflow = TextOverflow.Ellipsis ,maxLines = 1 ,text = stringResource(id = R.string.get_startedspeech))
-            Text(overflow = TextOverflow.Ellipsis ,maxLines = 1 ,text = "06:55 mins", fontSize = MaterialTheme.typography.labelSmall.fontSize)
+            Text(overflow = TextOverflow.Ellipsis ,maxLines = 1 ,text = content.title)
+            Text(overflow = TextOverflow.Ellipsis ,maxLines = 1 ,text = content.duration, fontSize = MaterialTheme.typography.labelSmall.fontSize)
         }
     }
 }
+
+
+
+
+
 @Composable
-fun CourseVideoItems(){
+fun CourseVideoItems(viewModel: CourseViewModel, contents:List<CourseContent>){
     LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp),contentPadding = PaddingValues(16.dp)){
-        items(listOf("wow","sa","ka","li","Shi","shon")){item->
-            CourseVideoItem()
-        }
+       itemsIndexed(contents){index,item->
+           CourseVideoItem(content = item, pos = index, viewModel = viewModel)
+       }
     }
 }
+
 
 
 
@@ -842,6 +573,9 @@ fun CourseVideoPlayScreen(viewModel:VideoPlayViewModel?){
 }
 
 
+
+
+
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun DisplayRationale(permisionState:PermissionState, rationale: String){
@@ -860,6 +594,10 @@ fun DisplayRationale(permisionState:PermissionState, rationale: String){
         }
     }
 }
+
+
+
+
 
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalPermissionsApi::class)
@@ -940,6 +678,11 @@ fun MapView(locationServices:FusedLocationProviderClient, viewModel:MapViewModel
 }
 
 
+
+
+
+
+
 @Composable
 fun SelectWorker(){
     var isLoading = rememberSaveable {
@@ -954,6 +697,11 @@ fun SelectWorker(){
 
     }
 }
+
+
+
+
+
 @Composable
 fun RatingBar(ratings:Double){
     var rating = ratings
@@ -972,6 +720,8 @@ fun RatingBar(ratings:Double){
         }
     }
 }
+
+
 
 
 @Composable
@@ -1004,6 +754,11 @@ fun WorkerCards(modifier: Modifier = Modifier, painter: Painter, name:String, di
         }
     }
 }
+
+
+
+
+
 
 @Composable
 fun NextedLay() {
@@ -1043,6 +798,9 @@ fun NextedLay() {
 fun ProfilePic(uri: Uri? = Uri.parse("https://images.unsplash.com/photo-1702924507770-a8a2ecb410b2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHx0b3BpYy1mZWVkfDE2fDZzTVZqVExTa2VRfHxlbnwwfHx8fHw%3D")){}
 
 
+
+
+
 @Composable
 fun MyPastWorkGallery(pastWork:List<String>){
     var state = rememberLazyStaggeredGridState()
@@ -1073,86 +831,11 @@ fun MyPastWorkGallery(pastWork:List<String>){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @OptIn(ExperimentalPermissionsApi::class)
 @Preview(showBackground = true)
 @Composable
 fun LoginPreview(){
     JobGigTheme {
-        var uri = Uri.parse("android.resource://" + LocalContext.current.packageName + "/" + R.raw.alarm_manager)
-       var locationServices = LocationServices.getFusedLocationProviderClient(LocalContext.current)
-        var viewModel:MapViewModel= viewModel()
-//        val permissions = rememberMultiplePermissionsState(permissions = listOf(Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION) )
-//        val owner = LocalLifecycleOwner.current
-//        DisposableEffect(key1 = owner){
-//            val observer = LifecycleEventObserver{ _, event->
-//                if(event ==  Lifecycle.Event.ON_RESUME ){
-//                    permissions.launchMultiplePermissionRequest()
-//                }
-//            }
-//            owner.lifecycle.addObserver(observer)
-//            onDispose {owner.lifecycle.removeObserver(observer)}
-//        }
-        var aboutme ="Dedicated  "
-        val instruct = listOf<InstructorDesignData>(InstructorDesignData(name = "Adetunji Akeem", description = "A Experience Carpenter With 20 years of experience", res = R.drawable.hen, uri = null),InstructorDesignData(name = "Adetunji Azeem Iku", description = "A Experience Carpenter With 20 years of experience", res = R.drawable.cow, uri = null))
-        var item = listOf<String>("How To Operate The Camera", "Basics use of CameraX", "How To Find The Perfect Scene", "Finding The right Angle", "Summary And Bonus")
-        var items= listOf<String>(
-            "https://images.unsplash.com/photo-1695653420644-ab3d6a039d53?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDF8MHxlZGl0b3JpYWwtZmVlZHwxfHx8ZW58MHx8fHx8",
-            "https://images.unsplash.com/photo-1697665666330-7acf230fa830?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwzfHx8ZW58MHx8fHx8",
-            "https://images.unsplash.com/photo-1697665666330-7acf230fa830?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwzfHx8ZW58MHx8fHx8",
-            "https://images.unsplash.com/photo-1702924507770-a8a2ecb410b2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHx0b3BpYy1mZWVkfDE2fDZzTVZqVExTa2VRfHxlbnwwfHx8fHw%3D",
-            "https://plus.unsplash.com/premium_photo-1700984292461-fa2d83c28c6b?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHx0b3BpYy1mZWVkfDEwfDZzTVZqVExTa2VRfHxlbnwwfHx8fHw%3D",
-            "https://images.unsplash.com/photo-1697450229849-30db7a91427e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHx0b3BpYy1mZWVkfDN8NnNNVmpUTFNrZVF8fGVufDB8fHx8fA%3D%3D",
-            "https://images.unsplash.com/photo-1703235379678-1e14654d69aa?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHx0b3BpYy1mZWVkfDd8NnNNVmpUTFNrZVF8fGVufDB8fHx8fA%3D%3D"
-        )
-       Box (modifier = Modifier.fillMaxSize()){
-          //CourseInfo(title = "Instructor", content = CourseContentDesign.InstructorDesign(instruct), infoType = CourseInfoDesign.InstructorDesign, contentType =CourseContentDesign.Instructor )
-          // Login()
-           CourseVideoItems()
-           //CourseVideoPlayScreen(viewModel = null)
-           //InstructorDesign()
-       //HomeCardView()
-       //SelectWorker()
-           //NextedLay()
-           //WorkerCards(painter = painterResource(id = R.drawable.hen), name ="Cockerel John" , distance ="3km", ratings = 4.0, duration ="10 min" )
-           //RatingBar(ratings = 3.5)
-           //MapView(locationServices, viewModel = viewModel,null)
-           //TopCategoryItem(category = "Plumbing Repair")
-           //VideoAboutMyWork(uri = uri)
-//          Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)  ) {
-//              PopularCourseCard()
-//              PopularCourseCard()
-//          }
-           //EnrolledScreen()
-           //EnrollCourse(top = 1.dp, bottom = 16.dp, title = "Learn The Basics About Canon Eos", duration = "12h 45min", ratings = 4.3, studentEnrolled =3598 , numRating =400 )
-           //CourseIntroRate(title = "Learn The Basics About Canon Eos", duration = "12h 45min", ratings = 4.3, studentEnrolled =3598 , numRating =400 )
-//           Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-//               Spacer(modifier = Modifier.width(16.dp))
-//               Text(text = "Learn The Basics About Canon Eos", modifier = Modifier.weight(1f, fill = true), fontSize = MaterialTheme.typography.titleLarge.fontSize)
-//               Duration(duration = "12h 30mins")
-//           }
-          //AboutMe(aboutMe = aboutme, title = "Name")
-       }
-        //MyPastWorkGallery(pastWork = items)
-       //FlowS()
-//        var items = listOf<String>("Catering Services","Plumber","Elephant","Engineering","Electrician","Headdress", "Fashion Designer")
-//        LazyVerticalGrid(modifier = Modifier.fillMaxSize(), columns = GridCells.Fixed(3) ){
-//           items(items){item-> LazyGrids(item = item)}
-//        }
+
     }
 }

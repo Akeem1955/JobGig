@@ -1,15 +1,17 @@
 package com.pioneers.jobgig.viewmodels
 
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.pioneers.jobgig.dataobj.User
+import com.pioneers.jobgig.dataobj.utils.User
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -93,6 +95,7 @@ class OnBoardViewModel:ViewModel() {
                     sucess = true
                 }
             }catch (e:Exception){
+                isLoading = false
                 isError = true
                 errorEmail = e.message ?:""
                 println(e.message)
@@ -122,9 +125,15 @@ class OnBoardViewModel:ViewModel() {
                 isLoading = false
                 isError = true
                 errorEmail = e.message ?:""
+                return@launch
             }
             try {
-                val userObj =User(null,0.0,null,false, emptyList(), emptyList(), emptyList(),false,null)
+                Firebase.auth.currentUser?.updateProfile(UserProfileChangeRequest.Builder()
+                    .setDisplayName(fullname)
+                    .setPhotoUri(Uri.parse("https://firebasestorage.googleapis.com/v0/b/psyched-oarlock-405313.appspot.com/o/UserProfile%2Fmingcute_user-4-fill.svg?alt=media&token=30a172c5-3106-418b-b223-e6b13680d162"))
+                    .build())?.await()
+                val currentUser = Firebase.auth.currentUser
+                val userObj = User(currentUser?.photoUrl,currentUser?.displayName,0.0,null,false, emptyList(), emptyList(), emptyList(),false,null)
                 if (user != null) {
                     Firebase.firestore.collection("Users").document(user.uid).set(userObj).await()
                 }

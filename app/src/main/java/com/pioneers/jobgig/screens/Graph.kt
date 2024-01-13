@@ -1,11 +1,17 @@
 package com.pioneers.jobgig.screens
 
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextMotion.Companion.Animated
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NamedNavArgument
@@ -24,7 +30,7 @@ import com.pioneers.jobgig.viewmodels.OnBoardViewModel
 
 @Composable
 fun ScreenNav(navHostController: NavHostController){
-    NavHost(navController = navHostController, startDestination = ScreenRoute.GetStarted.route){
+    NavHost(navController = navHostController, startDestination = "courseSection"){
         composable(route = ScreenRoute.GetStarted.route){
             GettingStarted(navHostController = navHostController)
         }
@@ -46,12 +52,15 @@ fun ScreenNav(navHostController: NavHostController){
 
 
         }
-        navigation(startDestination = ScreenRoute.Home.route, route = ScreenRoute.Main.route ){
-            composable(route = ScreenRoute.Home.route){
-                Box {
-                    Text(text = "Hello ${FirebaseAuth.getInstance().currentUser?.displayName} \n Email:${Firebase.auth.currentUser?.email}", modifier = Modifier.align(Alignment.Center))
-                }
-            }
+        navigation(startDestination = ScreenRoute.HomeScreenCourse.route, route = "courseSection" ){
+            composable(route = ScreenRoute.SearchCourse.route){}
+            composable(route = ScreenRoute.CourseScreen.route){}
+            composable(route = ScreenRoute.AllPopular.route){}
+            composable(route = ScreenRoute.SearchCourseResult.route){}
+            composable(route = ScreenRoute.EnrolledConfirmed.route){}
+            composable(route = ScreenRoute.AllCategory.route){}
+            composable(route = ScreenRoute.EnrollPreview.route){}
+
         }
     }
 }

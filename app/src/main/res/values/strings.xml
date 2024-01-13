@@ -10,4 +10,5 @@
     <string name="RECORD_AUDIO">We\'re dedicated to providing you with a seamless and effective experience on our platform. To enhance communication between you and the user, we request permission to access your device\'s microphone.</string>
     <string name="ACCESS_COARSE_LOCATION">Your privacy is our priority, and we want to ensure that you feel secure while using our platform. By granting us access to your location, you allow our app to connect you with local vocational workers efficiently.</string>
     <string name="ACCESS_FINE_LOCATION">Your privacy is our priority, and we want to ensure that you feel secure while using our platform. By granting us access to your location, you allow our app to connect you with local vocational workers efficiently.</string>
+
 </resources>

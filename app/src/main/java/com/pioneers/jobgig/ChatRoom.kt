@@ -105,7 +105,7 @@ class ChatRoom {
 fun PrevJ() {
     JobGigTheme {
         Column {
-            ChatRoom.Reciever(painter = painterResource(id = R.drawable.cow))
+            ChatRoom.Reciever(painter = painterResource(id = R.drawable.map_plumber))
             ChatRoom.Sender()
         }
 
