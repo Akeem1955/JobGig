@@ -10,12 +10,21 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.firestore.toObject
 import com.google.firebase.ktx.Firebase
 import com.pioneers.jobgig.dataobj.utils.User
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 class OnBoardViewModel:ViewModel() {
+    companion object{
+        var currentUser:User by mutableStateOf(User())
+
+    }
+    fun updateUser(user:User){
+        currentUser = user
+    }
+
     private var email by mutableStateOf("")
     private var password by mutableStateOf("")
     private var fullname by mutableStateOf("")
@@ -92,7 +101,13 @@ class OnBoardViewModel:ViewModel() {
                     isLoading = false
                     shouldShowEmailVerifyLogin = true
                 }else{
-                    sucess = true
+                    if (user != null){
+                        val nullable = Firebase.firestore.collection("Users").document(user.uid).get().await().toObject<User>()
+                        if (nullable != null){
+                            currentUser = nullable
+                            sucess = true
+                        }
+                    }
                 }
             }catch (e:Exception){
                 isLoading = false
@@ -128,13 +143,12 @@ class OnBoardViewModel:ViewModel() {
                 return@launch
             }
             try {
-                Firebase.auth.currentUser?.updateProfile(UserProfileChangeRequest.Builder()
+                user?.updateProfile(UserProfileChangeRequest.Builder()
                     .setDisplayName(fullname)
                     .setPhotoUri(Uri.parse("https://firebasestorage.googleapis.com/v0/b/psyched-oarlock-405313.appspot.com/o/UserProfile%2Fmingcute_user-4-fill.svg?alt=media&token=30a172c5-3106-418b-b223-e6b13680d162"))
                     .build())?.await()
-                val currentUser = Firebase.auth.currentUser
-                val userObj = User(currentUser?.photoUrl,currentUser?.displayName,0.0,null,false, emptyList(), emptyList(), emptyList(),false,null)
                 if (user != null) {
+                    val userObj = User(profilePic = user.photoUrl.toString(), fullname = user.displayName?:fullname, uid = user.uid)
                     Firebase.firestore.collection("Users").document(user.uid).set(userObj).await()
                 }
             }catch (e:Exception){

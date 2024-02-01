@@ -443,3 +443,17 @@ package com.pioneers.jobgig.screens
 //        }
 //    }
 //}
+
+
+val myVideoUri = "https://firebasestorage.googleapis.com/v0/b/psyched-oarlock-405313.appspot.com/o/CourseVideo%2Fpaint.mp4?alt=media&token=6d72f250-b7e1-4ec6-a27b-0a903307f7ad"
+
+
+var items= listOf<String>(
+    "https://images.unsplash.com/photo-1695653420644-ab3d6a039d53?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDF8MHxlZGl0b3JpYWwtZmVlZHwxfHx8ZW58MHx8fHx8",
+    "https://images.unsplash.com/photo-1697665666330-7acf230fa830?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwzfHx8ZW58MHx8fHx8",
+    "https://images.unsplash.com/photo-1697665666330-7acf230fa830?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwzfHx8ZW58MHx8fHx8",
+    "https://images.unsplash.com/photo-1702924507770-a8a2ecb410b2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHx0b3BpYy1mZWVkfDE2fDZzTVZqVExTa2VRfHxlbnwwfHx8fHw%3D",
+    "https://plus.unsplash.com/premium_photo-1700984292461-fa2d83c28c6b?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHx0b3BpYy1mZWVkfDEwfDZzTVZqVExTa2VRfHxlbnwwfHx8fHw%3D",
+    "https://images.unsplash.com/photo-1697450229849-30db7a91427e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHx0b3BpYy1mZWVkfDN8NnNNVmpUTFNrZVF8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1703235379678-1e14654d69aa?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHx0b3BpYy1mZWVkfDd8NnNNVmpUTFNrZVF8fGVufDB8fHx8fA%3D%3D"
+)

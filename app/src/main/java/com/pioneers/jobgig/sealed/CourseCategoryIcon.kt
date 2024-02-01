@@ -20,7 +20,7 @@ class CourseCategoryIcon(type:String) {
             }
             "Carpentry"->{
                 iconRes =R.drawable.carpenter
-                keyword="Carpentry"
+                keyword="carpentry"
             }
             "Salon_and_Beauty_Services"->{
                 iconRes =R.drawable.makeup
@@ -44,7 +44,7 @@ class CourseCategoryIcon(type:String) {
             }
             "Tailoring_and_Fashion_Design"->{
                 iconRes =R.drawable.tailor
-                keyword="Fashion"
+                keyword="fashion"
             }
             "Landscaping_and_Gardening"->{
                 iconRes =R.drawable.landscape
@@ -57,35 +57,36 @@ class CourseCategoryIcon(type:String) {
             }
             "Painting_and_Decorating"->{
                 iconRes =R.drawable.painter
-                keyword=""
+                keyword="paint"
             }
             "Jewelry_Making_and_Metalworking"->{
                 iconRes =R.drawable.jewelry
-                keyword=""
+                keyword="jewel"
             }
             "Appliance_Repair"->{
                 iconRes =R.drawable.mechanic
+                keyword = "repair"
             }
             "Upholstery_and_Furniture_Restoration"->{
                 iconRes =R.drawable.restore
-                keyword=""
+                keyword="furniture"
             }
             "Knitting_and_Textile_Crafts"->{
                 iconRes =R.drawable.kniting
-                keyword=""
+                keyword="crochet"
             }
             "Photography"->{
                 iconRes =R.drawable.camera
-                keyword=""
+                keyword="photo"
             }
             "Fabric_Dyeing_and_Tie-Dye_Techniques"->{
                 iconRes =R.drawable.tye_dye
-                keyword=""
+                keyword="techniques"
 
             }
             "Aluminium_Fabrication_and_Fitting"->{
                 iconRes =R.drawable.aluminium
-                keyword=""
+                keyword="repair"
             }
             else ->{iconRes = R.drawable.noto_hammer_and_wrench}
         }

@@ -19,7 +19,8 @@ import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-class MapViewModel:ViewModel() {
+class
+MapViewModel:ViewModel() {
     private var route: Routes? = null
     private var locationState by mutableStateOf(LatLng(1.35, 103.87))
      val locState
@@ -27,9 +28,8 @@ class MapViewModel:ViewModel() {
 
     fun updateLatLng(latitude:Double, longitude:Double){
        locationState = LatLng(latitude, longitude)
-        BuildConfig.maps_api_key
     }
-    fun GetPolygonLine(currentUser:LatLng,otherUser:LatLng):List<LatLng>?{
+    fun getPolygonLine(currentUser:LatLng,otherUser:LatLng):List<LatLng>?{
         viewModelScope.launch {
             if (route == null) {
                 val retrofit: Retrofit = Retrofit.Builder()

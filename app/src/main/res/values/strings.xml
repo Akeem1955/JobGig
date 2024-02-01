@@ -10,5 +10,31 @@
     <string name="RECORD_AUDIO">We\'re dedicated to providing you with a seamless and effective experience on our platform. To enhance communication between you and the user, we request permission to access your device\'s microphone.</string>
     <string name="ACCESS_COARSE_LOCATION">Your privacy is our priority, and we want to ensure that you feel secure while using our platform. By granting us access to your location, you allow our app to connect you with local vocational workers efficiently.</string>
     <string name="ACCESS_FINE_LOCATION">Your privacy is our priority, and we want to ensure that you feel secure while using our platform. By granting us access to your location, you allow our app to connect you with local vocational workers efficiently.</string>
-
+    <string name="perm">Those Permission are required for this feature</string>
+    <string name="session_offline">Offline</string>
+    <string name="session_impossible">Second peer is missing</string>
+    <string name="session_ready">Ready to start session</string>
+    <string name="session_creating">Creating session</string>
+    <string name="session_active">Session Active</string>
+    <string name="button_start_session">Start session</string>
+    <string name="button_join_session">Join session</string>
+    <string name="button_end_session">End Session</string>
+    <string name="voc_find_chanel">VocationalOnline</string>
+    <string name="voc_alert">JobAlert</string>
+    <string name="why_it_work">.  Empowerment: Position donors as heroes enabling individuals to pursue their passions by providing them with a dedicated workspace.\n\n.  Community Impact: Emphasize the positive influence on the community, as improved workspaces contribute to skill development and economic growth.\n\n.  Recognition: Offer a recognition program, acknowledging Workspace Heroes on a dedicated platform, demonstrating their commitment to fostering vocational skills.\n\n.  Investment in Futures: Showcase the idea that supporting workspaces is an investment in the future success of individuals and the community as a whole.</string>
+    <string name="why_it_worksa">Addressing Resource Gaps:\n\nDonations bridge resource gaps, ensuring that talented individuals have the tools they need to reach their full potential, fostering a more equitable and inclusive society.</string>
+    <string-array name="header">
+        <item >Economic Empowerment:</item>
+        <item>Skill Development:</item>
+        <item>Unleashing Entrepreneurial Potential:</item>
+        <item>Community Impact:</item>
+        <item>Addressing Resource Gaps:</item>
+    </string-array>
+    <string-array name="why_it_works">
+        <item >Your Donations empower individuals by providing the means to purchase tools, contributing to economic stability on a personal and community level.</item>
+        <item>Your Donations will facilitate skill growth, enabling workers to refine their craft and stay competitive in the job market, ultimately fostering personal and professional development.</item>
+        <item>Your Donations will help aspiring entrepreneurs acquire essential tools, turning vocational skills into viable businesses, thus contributing to job creation and economic growth</item>
+        <item>Your Donations have a ripple effect, positively impacting the community by supporting local businesses and fostering a culture of self-reliance and sustainability</item>
+        <item>Your Donations will bridge resource gaps, ensuring that talented individuals have the tools they need to reach their full potential, fostering a more equitable and inclusive society.</item>
+    </string-array>
 </resources>

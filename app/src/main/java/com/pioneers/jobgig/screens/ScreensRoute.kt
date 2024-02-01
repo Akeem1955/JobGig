@@ -32,10 +32,32 @@ sealed class ScreenRoute(var route: String){
             return "enrolled_sucess/$position/$type"
         }
     }
-    object InstructorDetailLScreenRoute:ScreenRoute("instructor_detail/{uri}"){
-        fun addUri(uri:String): String {
-            return "instructor_detail/$uri"
+    object InstructorDetailLScreenRoute:ScreenRoute("instructor_detail/{uri}/{about}"){
+        fun addUri(uri:String,about:String): String {
+            return "instructor_detail/$uri/$about"
         }
     }
+
+
+    object ServiceSearch:ScreenRoute("")
+    object ServiceVocOnline:ScreenRoute("")
+    object ServiceVocInfo:ScreenRoute("")
+    object ServiceSession:ScreenRoute("")
+    object ServiceChat:ScreenRoute("")
+    object ServiceRate:ScreenRoute("")
+
+
+
+    object ProfileEdit:ScreenRoute("")//done
+    object Donate:ScreenRoute("")//done
+    object DonateSeek:ScreenRoute("")//dones
+    object DonateGive:ScreenRoute("")//dones
+    object DonateWhy:ScreenRoute("")//done
+
+    object VocDashBoard:ScreenRoute("")//dones
+    object VocRequest:ScreenRoute("")//dones
+    object CreateTutorial:ScreenRoute("")//dones
+    object UploadTutorial:ScreenRoute("")//dones
+
 
 }

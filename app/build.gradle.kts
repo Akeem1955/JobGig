@@ -57,12 +57,12 @@ android {
 dependencies {
 
     implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
-    implementation ("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation ("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
     implementation ("androidx.navigation:navigation-compose:2.7.6")
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.activity:activity-compose:1.8.2")
-    implementation(platform("androidx.compose:compose-bom:2023.03.00"))
+    implementation(platform("androidx.compose:compose-bom:2023.10.01"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -70,7 +70,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2023.03.00"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2023.10.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
@@ -78,7 +78,7 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-storage")
     implementation("com.google.firebase:firebase-firestore")
-    implementation ("com.firebaseui:firebase-ui-auth:7.2.0")
+    implementation ("com.firebaseui:firebase-ui-auth:8.0.2")
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation("io.coil-kt:coil-svg:2.5.0")
@@ -96,7 +96,7 @@ dependencies {
     // Optionally, you can include the widgets library for ScaleBar, etc.
     implementation ("com.google.maps.android:maps-compose-widgets:4.3.0")
     implementation ("com.google.android.gms:play-services-location:21.0.1")
-    implementation ("com.google.maps.android:android-maps-utils:3.8.0")
+    implementation ("com.google.maps.android:android-maps-utils:3.8.2")
     implementation ("com.google.android.libraries.places:places:3.3.0")
     implementation("com.google.accompanist:accompanist-permissions:0.33.2-alpha")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -104,6 +104,15 @@ dependencies {
 
     implementation("androidx.datastore:datastore:1.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
 //    implementation ("com.squareup.leakcanary:leakcanary-android:2.13")
+    implementation ("io.getstream:stream-webrtc-android:1.1.1")
+    implementation ("io.getstream:stream-webrtc-android-ktx:1.1.1")
+    implementation ("io.getstream:stream-webrtc-android-compose:1.1.1")
+    implementation ("io.getstream:stream-webrtc-android-ui:1.1.1")
+    implementation("io.coil-kt:coil-video:2.5.0")
+
+
+    implementation("io.getstream:stream-log:1.1.4")
+    implementation("io.getstream:stream-log-android:1.1.4")
 }

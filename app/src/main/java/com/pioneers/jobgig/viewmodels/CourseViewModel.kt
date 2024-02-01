@@ -2,6 +2,7 @@ package com.pioneers.jobgig.viewmodels
 
 import android.content.Context
 import android.net.Uri
+import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -17,11 +18,13 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.toObject
 import com.pioneers.jobgig.dataobj.utils.Category
 import com.pioneers.jobgig.dataobj.utils.CategoryItems
 import com.pioneers.jobgig.dataobj.utils.CourseContent
 import com.pioneers.jobgig.dataobj.utils.CourseData
 import com.pioneers.jobgig.services.preference.AppPreference
+import com.pioneers.jobgig.services.preference.Apps
 import kotlinx.collections.immutable.mutate
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,20 +41,26 @@ class CourseViewModel:ViewModel() {
     private val topCategory =db.collection("Courses").document("top_category")
     private var popularQuery = db.collection("Courses").orderBy("learners",Query.Direction.DESCENDING).limit(20)
     private var popularQuery_x = db.collection("Courses").orderBy("learners",Query.Direction.DESCENDING).limit(20)
-    private var searchQuery = db.collection("Courses").limit(20).orderBy("title")
-    private var searchQuery_x = db.collection("Courses").limit(20).orderBy("title")
-    private var popularCourseSnapshot = MutableStateFlow(mutableListOf<DocumentSnapshot>())
-    private var searchCourseSnapshot = MutableStateFlow(mutableListOf<DocumentSnapshot>())
+    private var searchQuery = db.collection("Courses").limit(20)
+    private var searchQuery_x = db.collection("Courses").limit(20)
+    private var popularCourseSnapshot = MutableStateFlow(mutableStateListOf<DocumentSnapshot>())
+    private var searchCourseSnapshot = MutableStateFlow(mutableStateListOf<DocumentSnapshot>())
     var searchResultCourse = derivedStateOf {
         searchCourseSnapshot.value.map {doc->
-            doc.toObject(CourseData::class.java)
+            doc.toObject<CourseData>()
         }
     }
         private set
-    private var popularCourses = derivedStateOf { popularCourseSnapshot.value.map {doc->
-        doc.toObject(CourseData::class.java)
-
-    } }
+    private var popularCourses = try {
+        derivedStateOf { popularCourseSnapshot.value.map {doc->
+            println("Real popular Document Recomposing now")
+            doc.toObject<CourseData>()
+        } }
+    } catch (e:Exception){
+        e.printStackTrace()
+        println(e.message)
+        mutableStateOf<List<CourseData>>(emptyList())
+    }
     var topCategoryCourse  by mutableStateOf(emptyList<Category>())
         private set
     var loadingState by mutableStateOf(true)
@@ -74,14 +83,19 @@ class CourseViewModel:ViewModel() {
                 val popularResponse = async {
                     popularQuery.get().await()
                 }
-                topCategoryCourse = categoryResponse.await().toObject(CategoryItems::class.java)?.categories?.sortedByDescending {it.userEnrolled} ?: topCategoryCourse
+                topCategoryCourse = categoryResponse.await().toObject<CategoryItems>()?.categories?.sortedByDescending {it.userEnrolled} ?: topCategoryCourse
                 val docs = popularResponse.await().documents
+                println("Document snapshot for popular course is ${docs.size} ")
                 if(docs.size < 20){
                     popularQueryFinished  = true
                 }
+
                 popularCourseSnapshot.value.addAll(docs)
+                println("Document snapshot for popular course is ${popularCourseSnapshot.value.size} ")
+                println("Real Document for popular course is ${popularCourses.value.size} ")
                 loadingState = false
             }catch (e:Exception){
+                e.printStackTrace()
                 println(e.message)
                 loadingState = false
             }
@@ -109,13 +123,14 @@ class CourseViewModel:ViewModel() {
         viewModelScope.launch {
             try {
                 datastore.updateData {
+                    val update = it.searches.toMutableList()
+                    update.add(query)
                     it.copy(
-                        searches = it.searches.mutate {s->
-                            s.add(query)
-                        }
+                        searches = update.toList()
                     )
                 }
             }catch (e:Exception){
+                e.printStackTrace()
                 println(e.message)
             }
         }
@@ -124,15 +139,25 @@ class CourseViewModel:ViewModel() {
     fun getSearchItem(query:String){
         loadingState = true
        viewModelScope.launch {
-           searchQuery = searchQuery_x.startAt(query).endAt(query+"\uf8ff")
-           val searchResponse = async {
-               searchQuery.get().await()
+           try {
+               searchQuery = searchQuery_x.whereArrayContains("keyword",query.lowercase())
+               val searchResponse = async {
+                   searchQuery.get().await()
+               }
+               val docs = searchResponse.await().documents
+               println("Document snapshot for Querying course is ${docs.size} ")
+               if(docs.size < 20){
+                   searchQueryFinish = true
+               }
+               searchCourseSnapshot.value.clear()
+               searchCourseSnapshot.value.addAll(docs)
+               println("Document snapshot for Querying Stateflow course is ${searchCourseSnapshot.value.size} ")
+               loadingState = false
+           }catch (e:Exception){
+               e.printStackTrace()
+               println(e.message)
+               loadingState = false
            }
-           val docs = searchResponse.await().documents
-           if(docs.size < 20){
-               searchQueryFinish = true
-           }
-           searchCourseSnapshot.value.addAll(docs)
        }
     }
     fun loadMoreSearchQuery(){
@@ -189,6 +214,7 @@ class CourseViewModel:ViewModel() {
 
 
     fun addMediaItems(courseContent: List<CourseContent>){
+        player?.clearMediaItems()
         player?.setMediaItems(courseContent.map {
             it.uri
         }.map {uri->

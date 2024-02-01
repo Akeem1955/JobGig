@@ -98,6 +98,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
@@ -115,6 +116,7 @@ import com.pioneers.jobgig.ui.theme.JobGigTheme
 import com.pioneers.jobgig.viewmodels.CourseViewModel
 import com.pioneers.jobgig.viewmodels.MapViewModel
 import com.pioneers.jobgig.viewmodels.VideoPlayViewModel
+import com.pioneers.jobgig.viewmodels.VocConnectViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
 
@@ -273,6 +275,7 @@ fun CourseInfo(
 
 @Composable
 fun InstructorDesign(uri:String, name: String, description:String,navController: NavController){
+    val descrip = " $description"
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         Spacer(modifier = Modifier.width(6.dp))
         AsyncImage(
@@ -287,7 +290,8 @@ fun InstructorDesign(uri:String, name: String, description:String,navController:
             Text(text = name)
             Text(text = description)
         }
-        IconButton(onClick = {navController.navigate(route = ScreenRoute.InstructorDetailLScreenRoute.addUri(uri))}) {
+        println(uri +"  original")
+        IconButton(onClick = {navController.navigate(route = ScreenRoute.InstructorDetailLScreenRoute.addUri(uri.replace("/",","),description))}) {
             Icon(imageVector = Icons.Rounded.ArrowForwardIos, contentDescription = "")
         }
     }
@@ -317,7 +321,7 @@ fun AboutMe(aboutMe:String, title:String){
 
 
 @Composable
-fun VideoAboutMyWork(uri: Uri?){
+fun VideoAboutMyWork(uri: Uri?, title: String){
     val ctx = LocalContext.current
     val owner = LocalLifecycleOwner.current
     var videoDuration by rememberSaveable {
@@ -366,15 +370,20 @@ fun VideoAboutMyWork(uri: Uri?){
         }
     }
 
-    Surface(shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(250.dp)) {
-        VideoPlayer(modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 8.dp), player = player, lifecycle = lifecycle)
+    Column {
+        Text(text = title, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 24.dp))
+        Spacer(modifier = Modifier.height(4.dp))
+        Surface(shape = MaterialTheme.shapes.medium,
+            color = Color.Black,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 32.dp)
+                .height(150.dp)) {
+            VideoPlayer(modifier = Modifier
+                .fillMaxSize(), player = player, lifecycle = lifecycle)
+        }
     }
+
 }
 
 
@@ -423,26 +432,29 @@ fun TopCategoryItems(category:String){
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun DisplayRationale(permisionState:MultiplePermissionsState, rationale:List<String>){
-    Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize()) {
+    LaunchedEffect(key1 = true){
+        permisionState.launchMultiplePermissionRequest()
+    }
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
         Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier
-            .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .heightIn(min = 350.dp)) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            .heightIn(min = 300.dp)) {
+            Column {
                 var count = 0
                 val packageName =LocalContext.current.packageName
                 val context = LocalContext.current
                 permisionState.permissions.forEach { perm->
                     if (perm.status.shouldShowRationale){
                         Text(text = rationale[count])
-                    }else if(!perm.status.isGranted && !perm.status.shouldShowRationale){
+                    }
+                    else if(!perm.status.isGranted && !perm.status.shouldShowRationale){
                         Text(text = "Access to ${perm.permission} as been permanently revoked by You kindly enable it in the setting to be able to use the feature.")
                     }
                     count++
                 }
                 Button(onClick = {
                     val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                    intent.`package`= packageName
+                    intent.data = Uri.fromParts("package",packageName,null)
                     context.startActivity(intent)
                 }) {
                     Text(text = "Grant Access")
@@ -602,8 +614,8 @@ fun DisplayRationale(permisionState:PermissionState, rationale: String){
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun MapView(locationServices:FusedLocationProviderClient, viewModel:MapViewModel, polyline:List<LatLng>?){
-    Box(modifier = Modifier.fillMaxSize()) {
+fun MapView(modifier: Modifier,locationServices:FusedLocationProviderClient?, viewModel:VocConnectViewModel?, polyline:List<LatLng>?, workers:List<LatLng>?){
+    Box(modifier = modifier) {
         val uiSettings by remember {
             mutableStateOf(MapUiSettings(mapToolbarEnabled = true, compassEnabled = true, myLocationButtonEnabled = true, zoomControlsEnabled = true)) }
         val properties by remember {
@@ -612,7 +624,9 @@ fun MapView(locationServices:FusedLocationProviderClient, viewModel:MapViewModel
         val permissions = rememberMultiplePermissionsState(permissions = listOf(Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION) )
         val owner = LocalLifecycleOwner.current
         val cameraPositionState = rememberCameraPositionState {
-            position = CameraPosition.fromLatLngZoom(viewModel.locState, 18f)
+            if (viewModel != null) {
+                position = CameraPosition.fromLatLngZoom(viewModel.locState, 18f)
+            }
         }
         DisposableEffect(key1 = owner){
             val observer = LifecycleEventObserver{ _, event->
@@ -625,10 +639,14 @@ fun MapView(locationServices:FusedLocationProviderClient, viewModel:MapViewModel
         }
         LaunchedEffect(key1 = true){
             try {
+                if (viewModel == null)return@LaunchedEffect
+                if (locationServices == null)return@LaunchedEffect
                 println("Worked As expected")
                 val realLocation = locationServices.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null).await()
+
                 println("Worked As expected....")
                 viewModel.updateLatLng(realLocation.latitude, realLocation.longitude)
+
                 cameraPositionState.animate(CameraUpdateFactory.newLatLng(viewModel.locState),1000)
             }catch (e:Exception){
                 println("Error happened ${e.printStackTrace()}")
@@ -637,7 +655,7 @@ fun MapView(locationServices:FusedLocationProviderClient, viewModel:MapViewModel
                 println("About to Sleep........")
                 delay(5000)
                 try {
-                    if (permissions.allPermissionsGranted){
+                    if (permissions.allPermissionsGranted && viewModel !=null && locationServices != null){
                         println("Worked As expected")
                         val currentLocation = locationServices.lastLocation.await()
                         println("Worked As expected....")
@@ -664,9 +682,13 @@ fun MapView(locationServices:FusedLocationProviderClient, viewModel:MapViewModel
                     Polyline(points = polyline, color = Color.Magenta, width = 2f)
                     Marker(icon = BitmapDescriptorFactory.fromResource(R.drawable.noto_hammer_and_wrench), state = MarkerState(position = polyline[0]))
                     Marker(icon = BitmapDescriptorFactory.fromResource(R.drawable.mingcute_location_2_fill), state = MarkerState(position = polyline[polyline.lastIndex]))
-
                 }
-                Circle(center =viewModel.locState , radius = 50.0, fillColor = Color.Magenta, strokeColor = Color.Magenta, strokeWidth = 1f)
+                if (workers != null){
+                    val sam = workers.map {
+                        Marker(icon = BitmapDescriptorFactory.fromResource(R.drawable.noto_hammer_and_wrench), state = MarkerState(position = it))
+                    }
+                }
+                //Circle(center =viewModel.locState , radius = 50.0, fillColor = Color.Magenta, strokeColor = Color.Magenta, strokeWidth = 1f)
             }
         }
         else{
@@ -725,22 +747,18 @@ fun RatingBar(ratings:Double){
 
 
 @Composable
-fun WorkerCards(modifier: Modifier = Modifier, painter: Painter, name:String, distance:String,ratings: Double,duration:String) {
+fun WorkerCards(onClick:()->Unit, modifier: Modifier = Modifier, profilePic: String, name:String, distance:String,ratings: Double,duration:String) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant,
         modifier = modifier
+            .clickable {  }
             .height(80.dp)
             .fillMaxWidth()
             .padding(horizontal = 12.dp),
         shape = MaterialTheme.shapes.medium
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Image(
-                painter = painter,
-                contentDescription = "",
-                modifier = modifier.size(80.dp),
-                contentScale = ContentScale.Crop
-            )
+            AsyncImage(modifier = Modifier.size(80.dp) ,contentScale = ContentScale.FillBounds,model = ImageRequest.Builder(LocalContext.current).data(profilePic).error(R.drawable.round_account_circle_24).placeholder(R.drawable.restore).build(), contentDescription = "")
             Column(modifier = Modifier.padding(start = 16.dp, end = 8.dp)) {
                 Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                     Text(text = name, fontSize = MaterialTheme.typography.titleSmall   .fontSize)
@@ -802,28 +820,31 @@ fun ProfilePic(uri: Uri? = Uri.parse("https://images.unsplash.com/photo-17029245
 
 
 @Composable
-fun MyPastWorkGallery(pastWork:List<String>){
-    var state = rememberLazyStaggeredGridState()
-    LazyVerticalStaggeredGrid(columns = StaggeredGridCells.Adaptive(150.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalItemSpacing = 16.dp,
-        contentPadding = PaddingValues(8.dp) ,
-        modifier = Modifier.fillMaxSize(),
-        state = state){
-        items(pastWork){pastwork -> Surface(shape=MaterialTheme.shapes.medium) {
-            AsyncImage(
-                model = ImageRequest
-                    .Builder(LocalContext.current)
-                    .crossfade(1000)
-                    .fallback(R.drawable.round_image_24)
-                    .placeholder(R.drawable.round_image_24)
-                    .data(pastwork)
-                    .build(),
-                placeholder = painterResource(id = R.drawable.round_image_24) ,
-                modifier = Modifier.heightIn(min = 100.dp) ,
-                contentDescription ="Image Of Past Work" )
+fun MyPastWorkGallery(pastWork:List<String>,modifier: Modifier){
+    val state = rememberLazyStaggeredGridState()
+    Column {
+        Text(text = "Prev Work", fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 24.dp))
+        LazyVerticalStaggeredGrid(columns = StaggeredGridCells.Adaptive(125.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalItemSpacing = 16.dp,
+            contentPadding = PaddingValues(8.dp) ,
+            modifier = modifier,
+            state = state){
+            items(pastWork){pastwork -> Surface(shape=MaterialTheme.shapes.medium) {
+                AsyncImage(
+                    model = ImageRequest
+                        .Builder(LocalContext.current)
+                        .crossfade(1000)
+                        .fallback(R.drawable.round_image_24)
+                        .placeholder(R.drawable.round_image_24)
+                        .data(pastwork)
+                        .build(),
+                    placeholder = painterResource(id = R.drawable.round_image_24) ,
+                    modifier = Modifier.heightIn(min = 100.dp) ,
+                    contentDescription ="Image Of Past Work" )
 
-        }}
+            }}
+        }
     }
 }
 //
@@ -836,6 +857,7 @@ fun MyPastWorkGallery(pastWork:List<String>){
 @Composable
 fun LoginPreview(){
     JobGigTheme {
+        WorkerCards(profilePic = "", name = "Adewale Samuel", distance ="5km" , ratings =3.5 , duration ="30min", onClick = {} )
 
     }
 }

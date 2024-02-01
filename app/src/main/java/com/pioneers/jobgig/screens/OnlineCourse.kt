@@ -61,9 +61,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -87,8 +87,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.media3.common.MediaItem
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
@@ -103,12 +101,12 @@ import com.pioneers.jobgig.services.preference.AppPreference
 import com.pioneers.jobgig.services.preference.datastore
 import com.pioneers.jobgig.ui.theme.JobGigTheme
 import com.pioneers.jobgig.viewmodels.CourseViewModel
-import com.pioneers.jobgig.viewmodels.VideoPlayViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 
 
 @Composable
 fun InstructorDetailScreen(uri: String, about:String,navController: NavController ){
+    println(uri)
     Box(modifier = Modifier
         .fillMaxSize()
         .background(color = colorResource(id = R.color.btn))) {
@@ -123,7 +121,7 @@ fun InstructorDetailScreen(uri: String, about:String,navController: NavControlle
                     .fillMaxWidth()
                     .fillMaxHeight(0.5f)
                     .clip(MaterialTheme.shapes.small)
-                    ,contentScale = ContentScale.Crop ,model =ImageRequest.Builder(LocalContext.current).data(uri).error(R.drawable.round_image_24).build() , contentDescription = "")
+                    ,contentScale = ContentScale.Crop ,model =ImageRequest.Builder(LocalContext.current).data(Uri.parse(uri)).error(R.drawable.round_image_24).build() , contentDescription = "")
                 Divider()
                 Text(text = "About", fontWeight = FontWeight.Bold)
                 Text(text =about)
@@ -156,8 +154,8 @@ fun Screen1(viewModel: CourseViewModel, navController: NavController){
                         .padding(start = 16.dp, bottom = 16.dp)
                         .verticalScroll(state = rememberScrollState())) {
                         SearchCourseBtn(modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),navController)
-                        TopCategory(modifier = Modifier, items = viewModel.topCategoryCourse, navController)
-                        Popular(modifier = Modifier, items  = viewModel.popularCourse.value, navController)
+                        TopCategory(modifier = Modifier, items = viewModel.topCategoryCourse.subList(0,viewModel.topCategoryCourse.size/2), navController)
+                        Popular(modifier = Modifier, items  = viewModel.popularCourse, navController)
                     }
                 }
 
@@ -186,15 +184,14 @@ fun Screen3(viewModel: CourseViewModel, navController: NavController){
     val allCategory = viewModel.topCategoryCourse
     //all category screen
     Surface(color = colorResource(id = R.color.btn3)) {
-        Column {
+        Column(modifier = Modifier.fillMaxSize()) {
             HeaderMin(modifier = Modifier
-                .statusBarsPadding()
-                .padding(bottom = 8.dp), uri = null, title ="All Category",navController)
+                .padding(bottom = 8.dp).statusBarsPadding(), uri = null, title ="All Category",navController)
             Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier
-                .navigationBarsPadding()
                 .weight(1f)
                 .fillMaxWidth()) {
                 LazyVerticalGrid(horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.navigationBarsPadding(),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     columns = GridCells.Adaptive(100.dp), state = LazyGridState(),
                     contentPadding = PaddingValues(8.dp)){
@@ -231,8 +228,10 @@ fun Screen4(viewModel: CourseViewModel, query:String,navController: NavControlle
             .statusBarsPadding()
             .fillMaxSize(),color = MaterialTheme.colorScheme.background) {
             Column(modifier = Modifier
+                .padding(top = 16.dp)
                 .fillMaxSize()
                 .navigationBarsPadding()) {
+                SearchCourseBtn(modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),navController)
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp),state = listState, modifier = Modifier.weight(1f,true)){
                     itemsIndexed(searchresults){pos, item ->
                         if (item != null) {
@@ -273,7 +272,8 @@ fun Screen5(viewModel: CourseViewModel,navController: NavController){
             Column(modifier = Modifier
                 .fillMaxSize()
                 .navigationBarsPadding()) {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp),state = listState, modifier = Modifier.weight(1f,true)){
+                SearchCourseBtn(modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),navController)
+                LazyColumn(contentPadding = PaddingValues(top = 8.dp),verticalArrangement = Arrangement.spacedBy(16.dp),state = listState, modifier = Modifier.weight(1f,true)){
                     itemsIndexed(popularCourse){ pos,item ->
                         if (item != null) {
                             CourseCardSearch(data = item, navController =navController,pos,"popular" )
@@ -291,13 +291,14 @@ fun Screen5(viewModel: CourseViewModel,navController: NavController){
 fun Screen6(type:String, position:Int,viewModel: CourseViewModel, navController: NavController){
     //enroll preview
     val coursedata = if(type == "search") viewModel.searchResultCourse.value[position] else viewModel.popularCourse.value[position]
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.background)) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current).error(R.drawable.round_image_24).data(coursedata?.imageUri).build(),
             contentDescription = "",
-            contentScale = ContentScale.Crop,
+            contentScale = ContentScale.FillBounds,
             modifier = Modifier
                 .fillMaxWidth()
+                .statusBarsPadding()
                 .align(alignment = Alignment.TopCenter)
                 .fillMaxHeight(0.4f))
         Surface(
@@ -371,13 +372,15 @@ fun Screen6(type:String, position:Int,viewModel: CourseViewModel, navController:
 fun Screen7(navController: NavController, viewModel: CourseViewModel, type: String, position: Int){
     //you are enrolled
     val coursedata = if(type == "search") viewModel.searchResultCourse.value[position] else viewModel.popularCourse.value[position]
-    Surface(color = MaterialTheme.colorScheme.surfaceVariant) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp),modifier = Modifier.padding(12.dp)) {
+    Surface(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxSize()) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp),modifier = Modifier
+            .padding(12.dp)
+            .statusBarsPadding()) {
             IconButton(onClick = {navController.popBackStack() }) {
                 Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "", tint = MaterialTheme.colorScheme.onBackground)
             }
             Row(modifier = Modifier.heightIn(max = 120.dp),horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                AsyncImage(modifier = Modifier.weight(1f,true),model = ImageRequest.Builder(LocalContext.current).data(R.drawable.camera).build(), contentDescription = "")
+                AsyncImage(modifier = Modifier.weight(1f,true),model = ImageRequest.Builder(LocalContext.current).data(coursedata?.imageUri).build(), contentDescription = "")
 
                 Column(modifier = Modifier.weight(2f,true) ,verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(text = "You are now enrolled in:")
@@ -482,9 +485,10 @@ fun SearchCourseBtn(modifier: Modifier, navController: NavController){
 }
 @Composable
 fun TopCategoryItem(category:String, iconRes:Int,color:String, navController: NavController,query: String ){
+    println("$color nah you Cause am")
     Surface(color = Color(android.graphics.Color.parseColor(color)),shape = MaterialTheme.shapes.medium, modifier = Modifier
         .width(120.dp)
-        .clickable {navController.navigate(route = ScreenRoute.SearchCourseResult.query(query))  }
+        .clickable { navController.navigate(route = ScreenRoute.SearchCourseResult.query(query)) }
         .height(158.dp)) {
         Column(verticalArrangement = Arrangement.SpaceEvenly,horizontalAlignment = Alignment.CenterHorizontally) {
             Box(modifier = Modifier
@@ -496,7 +500,7 @@ fun TopCategoryItem(category:String, iconRes:Int,color:String, navController: Na
                         .size(width = 64.dp, height = 64.dp)
                         .clip(CircleShape))
             }
-            Text(text = category, modifier = Modifier.padding(bottom = 8.dp), textAlign = TextAlign.Center, color = Color.White)
+            Text(text = category, modifier = Modifier.padding(bottom = 8.dp), textAlign = TextAlign.Center)
         }
     }
 }
@@ -516,13 +520,14 @@ fun TopCategory(modifier: Modifier, items:List<Category>, navController: NavCont
             horizontalArrangement = Arrangement.spacedBy(16.dp)){
             items(items){item->
                 val helper =CourseCategoryIcon(item.icon)
+                println(item.color)
                 TopCategoryItem(category = item.icon.replace("_"," "), iconRes = helper.iconRes, color = item.color, navController, helper.keyword)
             }
         }
     }
 }
 @Composable
-fun Popular(modifier: Modifier,items:List<CourseData?>,navController: NavController){
+fun Popular(modifier: Modifier,items:State<List<CourseData?>>,navController: NavController){
     Column(modifier = modifier,verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically,modifier = Modifier
             .fillMaxWidth()
@@ -532,8 +537,8 @@ fun Popular(modifier: Modifier,items:List<CourseData?>,navController: NavControl
                 Text(text = "see all")
             }
         }
-        LazyRow(){
-            items(items){item->
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)){
+            items(items.value.subList(0,items.value.size/2)){item->
                 if (item != null) {
                     PopularCourseCard(item)
                 }
@@ -610,7 +615,10 @@ fun Search(navController: NavController,viewModel: CourseViewModel){
         onSearch = {viewModel.updateRecentSearches(ctx.datastore,query);navController.navigate(route = ScreenRoute.SearchCourseResult.query(query)){
             popUpTo(ScreenRoute.SearchCourse.route){inclusive = true}
         } },
-        active = true, onActiveChange = {navController.popBackStack()}) {
+        active = true, onActiveChange = {update->
+            if(!update){
+                navController.popBackStack()
+            }}) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp),contentPadding = PaddingValues(16.dp), state = rememberLazyListState()){
             items(recentSearch.searches){item->
                 RecentSearch(navController = navController, keyword = item)
@@ -621,19 +629,20 @@ fun Search(navController: NavController,viewModel: CourseViewModel){
 @Composable
 fun CourseCardSearch(data:CourseData, navController: NavController, pos:Int, type: String){
     Surface(modifier = Modifier
-        .padding(start = 16.dp)
-        .clickable { navController.navigate(ScreenRoute.EnrollPreview.enrollIndex(pos, type)) },shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp  ),color = MaterialTheme.colorScheme.surfaceVariant) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp),modifier = Modifier
+        .clickable { navController.navigate(ScreenRoute.EnrollPreview.enrollIndex(pos, type)) },color = MaterialTheme.colorScheme.background) {
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp),modifier = Modifier
             .fillMaxWidth()
+            .padding(horizontal = 8.dp)
             .height(100.dp)) {
-            AsyncImage(contentScale = ContentScale.Crop,
-                model = ImageRequest.Builder(LocalContext.current).data(data.imageUri).placeholder(R.drawable.plumber) .error(R.drawable.round_image_24).build(),
+            AsyncImage(contentScale = ContentScale.FillBounds,
+                model = ImageRequest.Builder(LocalContext.current).data(data.imageUri) .error(R.drawable.round_image_24).build(),
                 contentDescription = "", modifier = Modifier
+                    .clip(MaterialTheme.shapes.small)
                     .height(100.dp)
                     .weight(1f))
             Column(modifier = Modifier
                 .fillMaxHeight()
-                .weight(2f, true),verticalArrangement = Arrangement.SpaceAround) {
+                .weight(2f),verticalArrangement = Arrangement.SpaceAround) {
                 Text(text = data.title, modifier = Modifier.heightIn(max = 50.dp), overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold, fontSize = MaterialTheme.typography.bodyLarge.fontSize)
                 Row(verticalAlignment = Alignment.CenterVertically){
                     Text(text = "${data.rating}")
@@ -650,7 +659,7 @@ fun CourseCardSearch(data:CourseData, navController: NavController, pos:Int, typ
 fun RecentSearch(navController: NavController?, keyword:String){
     Row(horizontalArrangement = Arrangement.spacedBy(32.dp) ,verticalAlignment = Alignment.CenterVertically,modifier = Modifier
         .fillMaxWidth()
-        .clickable { navController?.navigate(route = ScreenRoute.SearchCourseResult.route) }) {
+        .clickable { navController?.navigate(route = ScreenRoute.SearchCourseResult.query(keyword)) }) {
         Icon(imageVector = Icons.Rounded.History, contentDescription ="", tint = MaterialTheme.colorScheme.onBackground )
         Text(text = keyword, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = MaterialTheme.typography.bodyLarge.fontSize)
     }
@@ -658,22 +667,7 @@ fun RecentSearch(navController: NavController?, keyword:String){
 
 
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
 
-    JobGigTheme {
-        Box(modifier = Modifier
-            .background(color = MaterialTheme.colorScheme.background)
-            .fillMaxSize()) {
-            //EnrolledScreen()
-            //InstructorDetailScreen()
-            //Screen4()
-            //CourseCardSearch(data = CourseData("How TO Pray",null,null,null,"",23,12,3.4,null,"",null,null,null))
-        }
-        
-    }
-}
 
 @Composable
 fun Test(){

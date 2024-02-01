@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -31,6 +32,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -38,6 +40,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.pioneers.jobgig.ui.theme.JobGigTheme
 
 class ChatRoom {
@@ -47,12 +51,12 @@ class ChatRoom {
 
         }
         @Composable
-        fun Reciever(painter:Painter){
+        fun Reciever(painter:String, msg:String, time: String){
             val width = (LocalConfiguration.current.screenWidthDp * 0.75).dp
             Row(modifier = Modifier.fillMaxWidth()) {
                 Spacer(modifier = Modifier.width(2.dp))
-                Image(
-                    painter = painter, contentDescription = "", modifier = Modifier
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current).data(painter).error(R.drawable.round_account_circle_24), contentDescription = "", modifier = Modifier
                         .size(30.dp)
                         .clip(
                             CircleShape
@@ -63,12 +67,17 @@ class ChatRoom {
                     .wrapContentWidth()
                     .widthIn(max = width)
                     .padding(bottom = 8.dp, top = 4.dp)
-                    , color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.medium) {
-                    Box {
-                        Text(text = "Dignified Humility - Khutbah by Nouman Ali Khan" +
-                                "TimeStamp:" +
-                                "Minute 10 upward", modifier = Modifier.padding(end = 4.dp, start = 4.dp, bottom = 20.dp))
-                        Text(fontWeight = FontWeight.Bold, fontSize = 10.sp, text = "2:30 pm", modifier = Modifier
+                    , color = MaterialTheme.colorScheme.surfaceVariant,
+                    shape = RoundedCornerShape(
+                        topStartPercent = 0,
+                        topEndPercent = 50,
+                        bottomEndPercent = 50,
+                        bottomStartPercent = 50
+                    )
+                ) {
+                    Box(modifier = Modifier.padding(top = 10.dp, start = 4.dp, end = 16.dp)) {
+                        Text(text = msg, modifier = Modifier.padding(end = 4.dp, start = 4.dp, bottom = 20.dp), fontSize = MaterialTheme.typography.bodySmall.fontSize)
+                        Text(fontWeight = FontWeight.Bold, fontSize = 10.sp, text = time, modifier = Modifier
                             .align(alignment = Alignment.BottomEnd)
                             .padding(4.dp))
                     }
@@ -77,19 +86,25 @@ class ChatRoom {
             }
         }
         @Composable
-        fun Sender(){
+        fun Sender(msg: String,time:String){
+            MaterialTheme.shapes.extraLarge
             val width = (LocalConfiguration.current.screenWidthDp * 0.75).dp
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 Surface(modifier = Modifier
                     .wrapContentWidth()
                     .widthIn(max = width)
-                    .padding(bottom = 8.dp, top = 4.dp, end = 20.dp)
-                    , color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.medium) {
-                    Box {
-                        Text(text = "Dignified Humility - Khutbah by Nouman Ali Khan" +
-                                "TimeStamp:" +
-                                "Minute 10 upward", modifier = Modifier.padding(end = 4.dp, start = 4.dp, bottom = 20.dp))
-                        Text(fontWeight = FontWeight.Bold, fontSize = 10.sp, text = "2:30 pm", modifier = Modifier
+                    .padding(bottom = 8.dp, top = 4.dp, end = 8.dp)
+                    , color = MaterialTheme.colorScheme.surfaceVariant,
+                    shape = RoundedCornerShape(
+                        topStartPercent = 50,
+                        topEndPercent = 0,
+                        bottomEndPercent = 50,
+                        bottomStartPercent = 50
+                    )
+                ) {
+                    Box(modifier = Modifier.padding(top = 10.dp, start = 4.dp, end = 16.dp)) {
+                        Text(text = msg, modifier = Modifier.padding(end = 4.dp, start = 4.dp, bottom = 20.dp), fontSize = MaterialTheme.typography.bodySmall.fontSize)
+                        Text(fontWeight = FontWeight.Bold, fontSize = 10.sp, text = time, modifier = Modifier
                             .align(alignment = Alignment.BottomEnd)
                             .padding(4.dp))
                     }
@@ -105,8 +120,8 @@ class ChatRoom {
 fun PrevJ() {
     JobGigTheme {
         Column {
-            ChatRoom.Reciever(painter = painterResource(id = R.drawable.map_plumber))
-            ChatRoom.Sender()
+           // ChatRoom.Reciever(painter = painterResource(id = R.drawable.layer))
+            //ChatRoom.Sender()
         }
 
     }

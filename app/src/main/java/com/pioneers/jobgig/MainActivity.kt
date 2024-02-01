@@ -1,50 +1,52 @@
 package com.pioneers.jobgig
 
 
-import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.core.app.NotificationManagerCompat
+
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.datastore.dataStore
+import androidx.navigation.NavController
+import androidx.navigation.NavGraph
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
+import androidx.navigation.Navigator
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.Firebase
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
+import com.pioneers.jobgig.screens.CallScreenManager
 import com.pioneers.jobgig.screens.HomeScreen
-import com.pioneers.jobgig.screens.Screen1
-import com.pioneers.jobgig.services.preference.PreferenceSerializer
+import com.pioneers.jobgig.screens.ProfileSetting
+import com.pioneers.jobgig.screens.Simulator
 import com.pioneers.jobgig.ui.theme.JobGigTheme
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 class MainActivity : ComponentActivity() {
     val db = Firebase.firestore.collection("Courses")
 
 
-
     val LocalHost = compositionLocalOf { SnackbarHostState() }
+
+
     //val Context.datastore by dataStore("app_preference.json",PreferenceSerializer)
 
     // See: https://developer.android.com/training/basics/intents/result
@@ -74,16 +76,52 @@ class MainActivity : ComponentActivity() {
    // @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+       NotificationManagerCompat.from(applicationContext).cancel(1957)
         installSplashScreen()
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.light(scrim = android.graphics.Color.TRANSPARENT, darkScrim = android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.light(scrim = android.graphics.Color.TRANSPARENT, darkScrim = android.graphics.Color.TRANSPARENT)
         )
+//       val sessionManager: WebRtcSessionManager = WebRtcSessionManagerImpl(
+//           context = this,
+//           signalingClient = SignalingClient(),
+//           peerConnectionFactory = StreamPeerConnectionFactory(this)
+//       )
 
 
 //        Authenticate()
         setContent {
             JobGigTheme {
+
+//                NavHost(navController = rememberNavController(), startDestination = "alert"){
+//                    composable("alert"){
+//                        Simulator()
+//                    }
+//                    composable(deepLinks = listOf(
+//                        navDeepLink {
+//                            uriPattern = "jobgig://confirm-gig/{data}"
+//                            action = Intent.ACTION_VIEW
+//                        }
+//                    ),
+//                        arguments = listOf(
+//                            navArgument(name = "data"){
+//                                type = NavType.StringType
+//                                defaultValue = ""
+//                            }
+//                        ),
+//                        route = "deep"){entry->
+//                        val data = entry.arguments?.getString("data")?:""
+//                        Box(contentAlignment = Alignment.Center,modifier = Modifier.fillMaxSize()) {
+//                            Text(text = "This is the Data: $data")
+//                        }
+//                    }
+//                }
+               // HomeScreen()
+                //ProfileSetting()
+                //CallScreenManager()
+                //VocConversation()
+
+                //ScreenNav(navHostController = rememberNavController())
 //                Box {
 //                    CompositionLocalProvider(LocalHost provides LocalHost.current) {
 //                        HomeScreen()
@@ -114,26 +152,31 @@ class MainActivity : ComponentActivity() {
 //                    mutableStateOf("")
 //                }
                 val scope = rememberCoroutineScope()
-                Box (modifier = Modifier
-                    .fillMaxSize()
-                    .background(color = Color(android.graphics.Color.parseColor("#F2EAD5")))){
-                   Button(modifier = Modifier.align(Alignment.Center),onClick = { scope.launch {
-                       try {
-                           println(GetCourseDatas()?.courses == null)
-                           GetCourseDatas()?.courses?.forEach {
-                               println(it.imageUri)
-                               async {
-                                   db.document("{${it.title}${Timestamp.now()}").set(it).await()
-                               }
-                           }
-                       }catch (e:Exception){
-                           println(e.printStackTrace())
-                           println("Exception in firestore ${e.message}")
-                       }
-                   } }) {
-                       Text(text = "Upload Please", color = Color.White, fontWeight = FontWeight.Bold)
-                   }
-                }
+//                Box (modifier = Modifier
+//                    .fillMaxSize()
+//                    .background(color = Color(android.graphics.Color.parseColor("#F2EAD5")))){
+//                   Button(modifier = Modifier.align(Alignment.Center),onClick = { scope.launch {
+//                       try {
+//                           val category = string.map {
+//                               val res = it.split(",")
+//                               Category(color = res[1], icon =res[0] , userEnrolled =(Math.random() * 100).toInt())
+//                           }
+//                           db.document("top_category").set(CategoryItems(categories = category)).await()
+////                           println(GetCourseDatas()?.courses == null)
+////                           GetCourseDatas()?.courses?.forEach {
+////                               println(it.imageUri)
+////                               async {
+////                                   db.document("{${it.title}${Timestamp.now()}").set(it).await()
+////                               }
+////                           }
+//                       }catch (e:Exception){
+//                           println(e.printStackTrace())
+//                           println("Exception in firestore ${e.message}")
+//                       }
+//                   } }) {
+//                       Text(text = "Upload Please", color = Color.White, fontWeight = FontWeight.Bold)
+//                   }
+//                }
                 //ScreenNav(navHostController = rememberNavController())
 //                Scaffold {
 //                    EnrollCourse(top = it.calculateTopPadding(), bottom = it.calculateBottomPadding(), title = "Learn The Basics About Canon Eos", duration = "12h 45min", ratings = 4.3, studentEnrolled =3598 , numRating =400 )

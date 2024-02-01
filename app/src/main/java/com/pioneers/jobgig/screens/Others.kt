@@ -1,0 +1,1142 @@
+package com.pioneers.jobgig.screens
+
+import android.content.Context
+import android.content.res.Configuration
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AccountBalanceWallet
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.AddCircleOutline
+import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.ArrowForward
+import androidx.compose.material.icons.rounded.Circle
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Email
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
+import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.Phone
+import androidx.compose.material.icons.rounded.Place
+import androidx.compose.material.icons.rounded.QuestionAnswer
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.UploadFile
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.Wallpapers
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
+import coil.decode.VideoFrameDecoder
+import coil.request.ImageRequest
+import com.pioneers.jobgig.R
+import com.pioneers.jobgig.dataobj.utils.CourseContent
+import com.pioneers.jobgig.dataobj.utils.DonationRequest
+import com.pioneers.jobgig.sealed.HomeCardViews
+import com.pioneers.jobgig.ui.theme.JobGigTheme
+import com.pioneers.jobgig.viewmodels.DonateViewModel
+import com.pioneers.jobgig.viewmodels.OnBoardViewModel
+import com.pioneers.jobgig.viewmodels.ProfileViewmodel
+import com.pioneers.jobgig.viewmodels.TutCreate
+import com.pioneers.jobgig.viewmodels.VocConnectViewModel
+import com.pioneers.jobgig.viewmodels.VocViewmodel
+
+
+@Composable
+fun ServiceWaitingConfirm(progress:Float, navController: NavController, viewmodel: VocConnectViewModel){
+    LaunchedEffect(key1 = viewmodel.transactSession){
+        if(viewmodel.transactSession.initiated){
+            viewmodel.getPolygonLine()
+            navController.navigate(route = ScreenRoute.ServiceSession.route)
+        }
+    }
+    Surface(shape = MaterialTheme.shapes.large, tonalElevation = 24.dp) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.padding(8.dp)) {
+            Text(text = "Waiting For Worker To Accept Request", fontSize = MaterialTheme.typography.bodySmall.fontSize, fontWeight = FontWeight.Bold)
+            LinearProgressIndicator(progress = progress, strokeCap = StrokeCap.Round)
+            if(progress <= 0){
+                Text(text = "Worker Reject or Failed to Accept Request!", fontSize = MaterialTheme.typography.labelSmall.fontSize, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+            }
+        }
+    }
+}
+@Composable
+fun BalanceDash2(){
+    Column(modifier = Modifier.fillMaxSize()) {
+        Surface (modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp),shape = MaterialTheme.shapes.large, tonalElevation = 24.dp, shadowElevation = 4.dp){
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp),modifier = Modifier.padding(16.dp)) {
+               Row(verticalAlignment = Alignment.CenterVertically,modifier = Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.SpaceBetween){
+                   Column {
+                       Text(text = "Add Money")
+                       Box {
+                           IconButton(onClick = { /*TODO*/ }) {
+                               Icon(imageVector = Icons.Rounded.AccountBalanceWallet, contentDescription = "", tint = colorResource(
+                                   id = R.color.btn
+                               ))
+                           }
+                           Icon(imageVector = Icons.Rounded.AddCircleOutline, contentDescription = "", modifier = Modifier.align(
+                               Alignment.BottomEnd), tint = colorResource(
+                               id = R.color.btn))
+                       }
+
+                   }
+                   Text(text = "Available Balance: $800", fontSize = MaterialTheme.typography.bodySmall.fontSize, fontWeight = FontWeight.Bold)
+               }
+                Row(modifier = Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.End) {
+                    Button(colors = ButtonDefaults.buttonColors(containerColor = colorResource(
+                        id = R.color.btn
+                    ), contentColor = Color.White),shape = MaterialTheme.shapes.large,onClick = { /*TODO*/ }) {
+                        Text(text = "Withdraw")
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+@Composable
+fun BalanceDash(){
+    Column {
+        Surface (modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp),shape = MaterialTheme.shapes.extraLarge, tonalElevation = 32.dp, shadowElevation = 6.dp){
+            Column(verticalArrangement = Arrangement.spacedBy(24.dp),modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically,modifier = Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.SpaceBetween ){
+                    Text(text = "Available Balance:", fontSize = MaterialTheme.typography.bodySmall.fontSize, fontWeight = FontWeight.Bold)
+                    Text(text = "$800")
+                }
+                Row(modifier = Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.SpaceBetween) {
+                    Button(colors = ButtonDefaults.buttonColors(containerColor = colorResource(
+                        id = R.color.btn
+                    ), contentColor = Color.White),shape = MaterialTheme.shapes.large,onClick = { /*TODO*/ }) {
+                        Text(text = "Deposit")
+                    }
+                    Button(colors = ButtonDefaults.buttonColors(containerColor = colorResource(
+                        id = R.color.btn
+                    ), contentColor = Color.White),shape = MaterialTheme.shapes.large,onClick = { /*TODO*/ }) {
+                        Text(text = "Withdraw")
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun TutCard(uri:String ="",label: String=""){
+    Surface(shadowElevation = 4.dp,tonalElevation = 24.dp,shape = MaterialTheme.shapes.large,modifier = Modifier
+        .fillMaxWidth()) {
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp),verticalAlignment = Alignment.CenterVertically,modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)) {
+            AsyncImage(modifier = Modifier
+                .size(72.dp)
+                .clip(MaterialTheme.shapes.medium),contentScale = ContentScale.FillBounds,model = ImageRequest.Builder(LocalContext.current).decoderFactory(VideoFrameDecoder.Factory()) .placeholder(R.drawable.kniting).data(uri).error(R.drawable.round_image_24).build(), contentDescription = "")
+            Column(modifier = Modifier.weight(1f,true)) {
+                Text(text = label, fontSize = MaterialTheme.typography.bodyLarge.fontSize, fontWeight = FontWeight.Bold)
+                Row(modifier = Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.End) {
+                    IconButton(onClick = { /*TODO*/ }) {
+                        Icon(imageVector = Icons.Rounded.Delete, contentDescription = "", tint = MaterialTheme.colorScheme.error)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TutUpload(openState: MutableState<Boolean>){
+    val launcher = rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia(), onResult = {})
+    Dialog(onDismissRequest = { openState.value=false }) {
+        Surface(tonalElevation = 32.dp, shape = MaterialTheme.shapes.extraLarge) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp),modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)) {
+               Row {
+                   Text(text ="Note:", fontSize = MaterialTheme.typography.labelMedium.fontSize, fontWeight = FontWeight.Bold )
+                   Text(text = "each video should not exceed 15 minute", fontSize = MaterialTheme.typography.labelMedium.fontSize)
+               }
+                Button(colors = ButtonDefaults.buttonColors(containerColor = colorResource(
+                    id = R.color.btn
+                ), contentColor = Color.White),shape = MaterialTheme.shapes.large,onClick = {
+                    launcher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
+                }) {
+                    Text(text = "Upload Tutorial")
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ManageTuts(){
+    val uploadState = rememberSaveable {
+        mutableStateOf(false)
+    }
+    val searchState = rememberSaveable {
+        mutableStateOf(false)
+    }
+    val queryState = rememberSaveable {
+        mutableStateOf("")
+    }
+    if (uploadState.value){
+        TutUpload(openState = uploadState)}
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row(verticalAlignment = Alignment.CenterVertically,modifier = Modifier.fillMaxWidth()) {
+            IconButton(onClick = { /*TODO*/ }) {
+                Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "")
+            }
+            Text(modifier = Modifier.weight(1f,true),
+                text = "Tutorial Dashboard",
+                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                fontWeight = FontWeight.Bold)
+        }
+        Surface {
+           Column(modifier = Modifier.fillMaxSize()) {
+               SearchBar(modifier = Modifier.padding(horizontal = 4.dp),placeholder = { Text(text = "Search Your Tutorial")},
+                   leadingIcon = { Icon(imageVector = Icons.Rounded.Search, contentDescription = "")},
+                   query = queryState.value,
+                   onQueryChange = {update->queryState.value = update},
+                   onSearch = {},
+                   active = searchState.value, onActiveChange = {update->searchState.value=update}) {
+               }
+               LazyColumn(contentPadding = PaddingValues(8.dp),verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                   item {
+                       Row(verticalAlignment = Alignment.CenterVertically,modifier = Modifier.fillMaxWidth( )) {
+                           Text(text = "Add new tutorial")
+                           IconButton(onClick = {uploadState.value = true}) {
+                               Icon(imageVector = Icons.Rounded.AddCircleOutline, contentDescription ="" )
+                           }
+                       }
+                   }
+                   item { TutCard() }
+                   item { TutCard() }
+                   item { TutCard() }
+                   item { TutCard() }
+                   item { TutCard() }
+                   item { TutCard() }
+                   item { TutCard() }
+               }
+           }
+        }
+    }
+}
+
+@Composable
+fun TutItem(label: String, onClick:()->Unit){
+    Row(verticalAlignment = Alignment.CenterVertically,horizontalArrangement = Arrangement.SpaceBetween,modifier = Modifier.fillMaxWidth()) {
+        Text(text = label)
+        IconButton(onClick = onClick) {
+            Icon(imageVector = Icons.Rounded.Add, contentDescription = "")}
+    }
+}
+
+@Composable
+
+fun CreateTuts(viewmodel:TutCreate){
+    var thumburi by rememberSaveable {
+        mutableStateOf("")
+    }
+    val thubnailStatus = rememberSaveable {
+        mutableStateOf(false)
+    }
+    val photopick = rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia(), onResult ={uri->
+        if (uri != null)thumburi = uri.toString()
+    } )
+
+    var label by rememberSaveable {
+        mutableStateOf("Requirement")
+    }
+    val contentPickStatus = rememberSaveable {
+        mutableStateOf(false)
+    }
+    val contentOtherStaus = rememberSaveable {
+        mutableStateOf(false)
+    }
+    if(contentPickStatus.value){
+        TutContent(openState = contentPickStatus,viewmodel)
+    }
+    if(contentOtherStaus.value){
+        TutContent(openState = contentOtherStaus,label,when(label){
+            "Requirement"->viewmodel.requirement
+            "Aim of This Tutorial"->viewmodel.aim
+            "Who is This Tutorial for"->viewmodel.who
+            else-> emptyList<String>().toMutableStateList()
+        })
+    }
+    if(thubnailStatus.value){
+        TutContent(openState = thubnailStatus, uri =Uri.parse(thumburi))
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        Surface(modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()) {
+            LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),verticalArrangement = Arrangement.spacedBy(16.dp)){
+                item {
+                   CustomTextField(modifier = Modifier, label = "Tutorial Name", placeholder = "A.Vondi",type = TextType.Edit, textState = viewmodel.tutName)
+               }
+                item{
+                    CustomTextField(modifier = Modifier, label = "Describe Yourself", placeholder = "I Am A Diligent Skillfully Vocational Worker",type = TextType.Person, textState = viewmodel.about)
+                }
+                item {
+                    CustomTextField(modifier = Modifier, label = "Describe Tutorial", placeholder = "This tutorial covers everything from basic stitches to advanced patterns.",type = TextType.Edit, textState = viewmodel.tutDes)
+                }
+                item {
+                    Column {
+                        Text(text = " Tutorial Thumbnail")
+                        Row(horizontalArrangement = Arrangement.SpaceBetween,modifier = Modifier.fillMaxWidth(),verticalAlignment = Alignment.CenterVertically) {
+                            Button(colors = ButtonDefaults.buttonColors(containerColor = colorResource(
+                                id = R.color.btn
+                            ), contentColor = Color.White),shape = MaterialTheme.shapes.medium,onClick = { photopick.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            ) }) {
+                                Text(text = "Upload")
+                            }
+                            if (thumburi.isNotBlank()){
+                                IconButton(onClick = { thubnailStatus.value = true }) {
+                                    Icon(imageVector = Icons.Rounded.UploadFile, contentDescription = "")
+                                }
+                            }
+                        }
+                    }
+                }
+                item {
+                   TutItem(label = "Requirement", onClick = {
+                       label = "Requirement"
+                       contentOtherStaus.value= true
+                   })
+                }
+                items(viewmodel.requirement){
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(modifier = Modifier.size(12.dp),imageVector = Icons.Rounded.Circle, contentDescription = "")
+                        Text(text = it, fontSize = MaterialTheme.typography.bodySmall.fontSize)
+                    }
+                }
+                item {
+                    TutItem(label = "Who is This Tutorial for", onClick = {
+                        label = "Who is This Tutorial for"
+                        contentOtherStaus.value= true
+                    })
+                }
+                items(viewmodel.who){
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(modifier = Modifier.size(12.dp),imageVector = Icons.Rounded.Circle, contentDescription = "")
+                        Text(text = it, fontSize = MaterialTheme.typography.bodySmall.fontSize)
+                    }
+                }
+                item {
+                    TutItem(label = "Aim of This Tutorial", onClick = {
+                        label = "Aim of This Tutorial"
+                        contentOtherStaus.value= true
+                    })
+                }
+                items(viewmodel.aim){
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(modifier = Modifier.size(12.dp),imageVector = Icons.Rounded.Circle, contentDescription = "")
+                        Text(text = it, fontSize = MaterialTheme.typography.bodySmall.fontSize)
+                    }
+                }
+                item {
+                    TutItem(label = "Add Tutorial Content", onClick = {
+                        contentPickStatus.value= true
+                    })
+                }
+                items(viewmodel.tutContent){
+                    TutCard(it.uri, it.title)
+                }
+                item {
+                    Button(modifier = Modifier.fillMaxWidth(),colors = ButtonDefaults.buttonColors(containerColor = colorResource(
+                        id = R.color.btn
+                    ), contentColor = Color.White),shape = MaterialTheme.shapes.medium,onClick = { /*TODO*/ }) {
+                        Text(text = "Create Tutorial")
+                    }
+                }
+
+            }
+        }
+    }
+}
+
+@Composable
+fun VocationalDashboard(){
+    val timeline = rememberSaveable {
+        mutableStateOf(TimeLine.Daily)
+    }
+    Box {
+        Surface {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp),modifier = Modifier.fillMaxSize()) {
+                Row (verticalAlignment = Alignment.CenterVertically,modifier = Modifier.fillMaxWidth()){
+                    AsyncImage(contentScale = ContentScale.Crop,modifier = Modifier
+                        .size(50.dp)
+                        .clip(
+                            CircleShape
+                        ),model = ImageRequest.Builder(LocalContext.current).placeholder(R.drawable.kniting).build(), contentDescription = "")
+                    Text(text = "Hi, Adebisi", modifier = Modifier.weight(1f,true), fontSize = MaterialTheme.typography.labelSmall.fontSize, fontWeight = FontWeight.Bold)
+                    Text(text = "Create And Share",fontSize = MaterialTheme.typography.labelSmall.fontSize, fontWeight = FontWeight.Bold, color = colorResource(
+                        id = R.color.btn
+                    ))
+                    IconButton(onClick = { /*TODO*/ }) {
+                        Icon(imageVector = Icons.Rounded.ArrowForward, contentDescription = "", tint = colorResource(
+                            id = R.color.btn
+                        ))
+                    }
+                    
+                }
+                Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
+                    TimelineHelper(timeline = timeline, type = TimeLine.Daily, text ="Daily" )
+                    TimelineHelper(timeline = timeline, type = TimeLine.Monthly, text ="Monthly" )
+                    TimelineHelper(timeline = timeline, type = TimeLine.ALlTime, text ="All Time" )
+                }
+                LazyVerticalGrid(horizontalArrangement = Arrangement.spacedBy(16.dp),verticalArrangement = Arrangement.spacedBy(16.dp),contentPadding = PaddingValues(16.dp),columns = GridCells.Adaptive(150.dp)){
+                    item { TimelineCard(label = "23", content = "Total Tutorials") }
+                    item { TimelineCard(label = "23,000", content = "Total Subscribed") }
+                    item { TimelineCard(label = "4.1", content = "OverAll Rating") }
+                    item { TimelineCard(label = "90k", content = "Total Views") }
+                }
+                LazyColumn(contentPadding = PaddingValues(8.dp)){
+                    item { HomeCardView(type = HomeCardViews.Courses, navController = rememberNavController(), route =ScreenRoute.HomeScreenCourse.route ) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TimelineHelper(timeline:MutableState<TimeLine>, type:TimeLine, text:String){
+    if(timeline.value.name == type.name) Button(colors = ButtonDefaults.buttonColors(containerColor = colorResource(
+        id = R.color.btn
+    ), contentColor = Color.White),onClick = { /*TODO*/ }) {
+        Text(text = text)
+    }else TextButton(onClick = { timeline.value = type}) {
+        Text(text = text)
+    }
+}
+
+@Composable
+fun TimelineCard(label: String, content:String){
+    Surface(modifier = Modifier.size(150.dp), tonalElevation = 20.dp, shadowElevation = 4.dp, shape = MaterialTheme.shapes.medium) {
+        Column(verticalArrangement = Arrangement.Center,horizontalAlignment = Alignment.CenterHorizontally,modifier = Modifier.fillMaxSize()) {
+            Text(text = label)
+            Text(text = content)
+        }
+    }
+}
+
+@Composable
+fun RequestVerification(viewmodel:VocViewmodel,navController: NavController){
+    val ctx = LocalContext.current
+    //if(viewmod)
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .background(color = colorResource(id = R.color.btn))) {
+        Row(verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()) {
+            IconButton(onClick = { if(navController.canGoBack)navController.popBackStack()  }) {
+                Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "", tint = Color.White)
+            }
+            Text(textAlign = TextAlign.Center,modifier = Modifier.weight(1f),text = "Request Verification", fontWeight = FontWeight.Bold, color = Color.White)
+        }
+        Surface(modifier = Modifier
+            .weight(1f, true)
+            .fillMaxWidth(), shape = RoundedCornerShape(topStart = 24.dp , topEnd = 24.dp)) {
+            LazyColumn(contentPadding = PaddingValues(vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxSize()) {
+                item {
+                    CustomTextField(modifier = Modifier.padding(horizontal = 16.dp), label = "Email", placeholder = "adetun@gmail.com",type = TextType.Email,textState = viewmodel.email)
+                }
+                item {
+                    CustomTextField(modifier = Modifier.padding(horizontal = 16.dp), label = "Phone Number", placeholder = "+2349064805505",type = TextType.Phone,textState = viewmodel.phone)
+                }
+                item {
+                    CustomTextField(modifier = Modifier.padding(horizontal = 16.dp), label = "About You", placeholder = "I am a decent person",type = TextType.Person,textState = viewmodel.about)
+                }
+                item {
+                    CustomTextField(modifier = Modifier.padding(horizontal = 16.dp), label = "Work Address", placeholder = "1, Baamlong Street",type = TextType.Address,textState = viewmodel.address)
+                }
+                item { Divider() }
+                item {
+                    var pickError by rememberSaveable {
+                        mutableStateOf(false)
+                    }
+                    var picked by rememberSaveable {
+                        mutableStateOf(false)
+                    }
+                    val photoPicker = rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia(), onResult = {uri->
+                        if(uri != null){picked = true;viewmodel.videoUri.value=uri.toString()}else {pickError = true;picked=false}
+                    } )
+                    if (pickError){
+                        Dialog(onDismissRequest = { pickError = false }) {
+                            Surface(shape = MaterialTheme.shapes.extraLarge, tonalElevation = 32.dp) {
+                                Text(text = "Error happen when picking try picking again", modifier = Modifier.padding(24.dp), color = MaterialTheme.colorScheme.error)
+                            }
+                        }
+                    }
+                    Column(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)) {
+                        Text(text = "Upload a 30s video about your work")
+                       Row(horizontalArrangement = Arrangement.SpaceBetween,modifier = Modifier.fillMaxWidth(),verticalAlignment = Alignment.CenterVertically) {
+                           Button(colors = ButtonDefaults.buttonColors(containerColor = colorResource(
+                               id = R.color.btn
+                           ), contentColor = Color.White),shape = MaterialTheme.shapes.medium,onClick = { photoPicker.launch(
+                               PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)
+                           ) }) {
+                               Text(text = "Upload")
+                           }
+                          if (picked){
+                              Icon(imageVector = Icons.Rounded.UploadFile, contentDescription = "")
+                          }
+                       }
+                    }
+                }
+                item { Divider() }
+                item {
+                    var pickError by rememberSaveable {
+                        mutableStateOf(false)
+                    }
+                    val photoPicker = rememberLauncherForActivityResult(contract = ActivityResultContracts.PickMultipleVisualMedia(), onResult = {uris->
+                        if(uris.isNotEmpty()){
+                            viewmodel.gallery = uris.map {
+                                it.toString()
+                            }
+                        }else pickError = true
+                    } )
+                    if (pickError){
+                        Dialog(onDismissRequest = { pickError = false }) {
+                            Surface(shape = MaterialTheme.shapes.extraLarge, tonalElevation = 32.dp) {
+                                Text(text = "No Picture Was Selected", modifier = Modifier.padding(24.dp), color = MaterialTheme.colorScheme.error)
+                            }
+                        }
+                    }
+                    Column(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)) {
+                        Text(text = "Upload images showcasing your previous work as a vocational worker. Include photos that highlight the quality and variety of your skills.")
+                        Row(horizontalArrangement = Arrangement.SpaceBetween,modifier = Modifier.fillMaxWidth(),verticalAlignment = Alignment.CenterVertically) {
+                            Button(colors = ButtonDefaults.buttonColors(containerColor = colorResource(
+                                id = R.color.btn
+                            ), contentColor = Color.White),shape = MaterialTheme.shapes.medium,onClick = { photoPicker.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            ) }) {
+                                Text(text = "Pick Photos")
+                            }
+                        }
+                    }
+                }
+                item {
+                    MyPastWorkGallery(pastWork = viewmodel.gallery, modifier = Modifier
+                        .heightIn(max = 700.dp)
+                        .fillMaxWidth())
+                }
+                item { Divider() }
+                item{
+                    Button(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),colors = ButtonDefaults.buttonColors(containerColor = colorResource(
+                        id = R.color.btn
+                    ), contentColor = Color.White),shape = MaterialTheme.shapes.medium,onClick = { viewmodel.requestVerification(ctx)}) {
+                        Text(text = "Request Verification")
+                    }
+                }
+
+            }
+        }
+    }
+}
+
+@Composable
+fun DonateAsk(viewModel: DonateViewModel){
+    val textState = rememberSaveable {
+        mutableStateOf("")
+    }
+    val type = rememberSaveable {
+        mutableStateOf(DonateType.SkillForgeAid.name)
+    }
+    var notQualify by rememberSaveable {
+        mutableStateOf(false)
+    }
+    if (notQualify){
+        Dialog(onDismissRequest = { notQualify = false}) {
+            Surface(shape = MaterialTheme.shapes.large, tonalElevation = 32.dp) {
+                Text(text = "You are Not A Vocational Worker...")
+            }
+        }
+    }
+    if (viewModel.loadingState){
+        Dialog(onDismissRequest = { }) {
+            CircularProgressIndicator()
+        }
+    }
+    if (viewModel.errorState){
+        Dialog(onDismissRequest = { viewModel.errorState = false }) {
+            Surface (shape = MaterialTheme.shapes.large, tonalElevation = 32.dp){
+                Text(text = viewModel.errorMsg)
+            }
+
+        }
+    }
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .background(color = colorResource(id = R.color.btn))) {
+        Row(verticalAlignment = Alignment.CenterVertically,horizontalArrangement = Arrangement.SpaceBetween,modifier = Modifier.fillMaxWidth()) {
+            IconButton(onClick = { /*TODO*/ }) {
+                Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "", tint = Color.White)
+            }
+            Text(textAlign = TextAlign.Center,modifier = Modifier.weight(1f),text = "Request For Vocational Support", fontWeight = FontWeight.Bold, color = Color.White)
+        }
+
+        Surface(modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding(),
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp),horizontalAlignment = Alignment.CenterHorizontally,modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)) {
+               CustomTextField(modifier = Modifier, type = TextType.Reason, placeholder = "Your answer here...", label = "Reason For Assistance", textState = textState)
+                Text(text = "Request Type:", modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp), fontSize = MaterialTheme.typography.labelMedium.fontSize, fontWeight = FontWeight.Bold)
+                Drop(modifier = Modifier, items = enumValues<DonateType>().map { it.name }, type)
+                Button(colors = ButtonDefaults.buttonColors(containerColor = colorResource(
+                    id = R.color.btn
+                ), contentColor = Color.White),shape = MaterialTheme.shapes.large,onClick = {
+                    val req = DonationRequest()
+                    req.name=OnBoardViewModel.currentUser.fullname
+                    req.profile= OnBoardViewModel.currentUser.profilePic
+                    req.reason=textState.value
+                    if(type.value == DonateType.HavenFund.name||type.value== DonateType.SkillForgeAid.name){
+                        req.target = viewModel.targets[type.value] ?:0.0
+                        req.type=type.value
+                    }
+                    if (OnBoardViewModel.currentUser.verified)viewModel.addDonationReq(req)else notQualify = true
+                }) {
+                    Text(text = "Submit Request")
+                }
+            }
+        }
+    }
+}
+@Composable
+fun DonateGiveCard(type:DonateType, onClick: () -> Unit,req:DonationRequest){
+    var showMore by rememberSaveable {
+        mutableStateOf(true)
+    }
+    val fundType by rememberSaveable {
+        mutableStateOf(type)
+    }
+    val drop = if(!showMore)Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown
+    Surface(modifier = Modifier.padding(horizontal = 16.dp),shape = MaterialTheme.shapes.extraLarge, tonalElevation = 32.dp, shadowElevation = 6.dp) {
+        when(fundType){
+            DonateType.CraftSpace -> {
+                Column(modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxWidth()) {
+                    Row (horizontalArrangement = Arrangement.spacedBy(8.dp),verticalAlignment = Alignment.CenterVertically,modifier = Modifier.fillMaxWidth()){
+                        AsyncImage(modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape),
+                            model = ImageRequest.Builder(LocalContext.current).placeholder(R.drawable.kniting).data(R.drawable.kniting)  .build(),
+                            contentDescription = "",
+                            contentScale = ContentScale.Crop)
+                        Text(text = "From, ${req.name}", fontSize = MaterialTheme.typography.bodySmall.fontSize, fontWeight = FontWeight.Bold)
+                    }
+                    Column(modifier = Modifier.animateContentSize()){
+                        Row(modifier = Modifier.fillMaxWidth(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(text = "Reason for Assistance: ")
+                            IconButton(onClick = { showMore = !showMore }) {
+                                Icon(imageVector = drop, contentDescription = "")
+                            }
+                        }
+                        if (showMore){
+                            Text(text = req.reason)
+                        }
+                    }
+                    Row(modifier = Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.End) {
+                        Button(colors = ButtonDefaults.buttonColors(containerColor = colorResource(
+                            id = R.color.btn
+                        ), contentColor = Color.White),shape = MaterialTheme.shapes.large,onClick =  onClick) {
+                            Text(text = "Provide WorkSpace")
+                        }
+                    }
+                }
+            }
+            else ->{
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp),modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxWidth()) {
+                    Row (horizontalArrangement = Arrangement.spacedBy(8.dp),verticalAlignment = Alignment.CenterVertically,modifier = Modifier.fillMaxWidth()){
+                        AsyncImage(modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape),
+                            model = ImageRequest.Builder(LocalContext.current).placeholder(R.drawable.kniting).data(R.drawable.kniting)   .build(),
+                            contentDescription = "",
+                            contentScale = ContentScale.Crop)
+                        Text(text = "From, ${req.name}", fontSize = MaterialTheme.typography.bodySmall.fontSize, fontWeight = FontWeight.Bold)
+                    }
+                    Column(modifier = Modifier.animateContentSize()){
+                        Row(modifier = Modifier.fillMaxWidth(),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(text = "Reason for Assistance: ",fontSize = MaterialTheme.typography.bodySmall.fontSize, fontWeight = FontWeight.Bold)
+                            IconButton(onClick = { showMore = !showMore }) {
+                                Icon(imageVector = drop, contentDescription = "")
+                            }
+                        }
+                        if (showMore){
+                            Text(text = req.reason,fontSize = MaterialTheme.typography.bodySmall.fontSize)
+                        }
+                    }
+                    Row {
+                        Text(text = "Target: ",fontSize = MaterialTheme.typography.bodySmall.fontSize, fontWeight = FontWeight.Bold)
+                        Text(text = "${req.target}",fontSize = MaterialTheme.typography.labelSmall.fontSize, fontWeight = FontWeight.Bold)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = "Funded ${(req.raised/req.target) * 100}%",fontSize = MaterialTheme.typography.labelSmall.fontSize, fontWeight = FontWeight.Bold)
+                        LinearProgressIndicator(modifier = Modifier.height(8.dp),progress = 0.6f, strokeCap = StrokeCap.Round)
+                    }
+                    Row(modifier = Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.End) {
+                        Button(colors = ButtonDefaults.buttonColors(containerColor = colorResource(
+                            id = R.color.btn
+                        ), contentColor = Color.White),shape = MaterialTheme.shapes.large,onClick = onClick) {
+                            Text(text = "Donate")
+                        }
+                    }
+                }
+            }
+
+
+        }
+    }
+}
+
+@Composable
+fun DonateGive(viewModel: DonateViewModel,navController: NavController, type:DonateType){
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = { if (navController.canGoBack)navController.popBackStack() }) {
+                Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "")
+            }
+            Text(text = "Help A Vocational Worker", fontSize = MaterialTheme.typography.labelMedium.fontSize, fontWeight = FontWeight.Bold)
+        }
+        Surface(modifier = Modifier
+            .weight(1f)
+            .fillMaxWidth()) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)){
+                item { Spacer(modifier = Modifier) }
+                items(when(type)
+                {
+                    DonateType.CraftSpace->viewModel.donationsWorkspace.value
+                    else ->viewModel.donations.value
+                }){
+                    DonateGiveCard(type = type, req = it, onClick = {})
+                }
+            }
+        }
+    }
+}
+@Composable
+fun DonateWhy(navController: NavController){
+    val whyitwork = stringArrayResource(id = R.array.why_it_works)
+    val whyitworkHeader = stringArrayResource(id = R.array.header)
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = { if(navController.canGoBack)navController.popBackStack()}) {
+                Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "")
+            }
+            Text(text = "Donation Program", fontSize = MaterialTheme.typography.labelMedium.fontSize, fontWeight = FontWeight.Bold)
+        }
+        Surface(modifier = Modifier
+            .weight(1f)
+            .fillMaxWidth()) {
+            LazyColumn(contentPadding = PaddingValues(vertical = 16.dp),verticalArrangement = Arrangement.spacedBy(16.dp)){
+                item { HomeCardView(type = HomeCardViews.DonateMoney, navController = navController, route =ScreenRoute.DonateGive.route ) }
+                item { HomeCardView(type = HomeCardViews.ProvideWorkspace, navController = navController, route = ScreenRoute.DonateGive.route) }
+                item {
+                    Text(text = "Why Your Donation Works", fontWeight = FontWeight.Bold,
+                        fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp), color = colorResource(id = R.color.btn))
+                }
+                itemsIndexed(whyitworkHeader){index,value->
+                    Column(modifier = Modifier.padding(horizontal = 8.dp),verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(text = value, fontSize = MaterialTheme.typography.bodyLarge.fontSize, fontWeight = FontWeight.Bold)
+                        Text(text = whyitwork[index], fontSize = MaterialTheme.typography.labelMedium.fontSize, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+            }
+        }
+    }
+}
+
+@Composable
+fun Donate(navController: NavController){
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = { if (navController.canGoBack)navController.popBackStack() }) {
+                Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "")
+            }
+            Text(text = "Donation Program", fontSize = MaterialTheme.typography.labelMedium.fontSize, fontWeight = FontWeight.Bold)
+        }
+        Surface(modifier = Modifier
+            .weight(1f)
+            .fillMaxWidth()) {
+            LazyColumn(modifier = Modifier.padding(16.dp),verticalArrangement = Arrangement.spacedBy(16.dp)){
+                item { HomeCardView(type = HomeCardViews.Donate, navController = navController, route =ScreenRoute.DonateWhy.route ) }
+                item { HomeCardView(type = HomeCardViews.DonateAsk, navController = navController, route = ScreenRoute.DonateSeek.route) }
+
+            }
+        }
+    }
+}
+
+@Composable
+fun Needs(modifier: Modifier){
+    Column(modifier = modifier) {
+        Text(text = "Reason for Assistance", fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 24.dp))
+        Spacer(modifier = Modifier.height(4.dp))
+        Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 8.dp, end = 8.dp)) {
+            TextField(colors = TextFieldDefaults.colors(focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent),shape = MaterialTheme.shapes.extraLarge,
+                modifier = Modifier
+                    .fillMaxWidth(),value = "Hi", onValueChange = {})
+        }
+    }
+
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun Drop(modifier: Modifier, items:List<String>, state:MutableState<String>){
+
+    var menuState by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    ExposedDropdownMenuBox(modifier = modifier,expanded = menuState, onExpandedChange = {menuState= !menuState}) {
+       OutlinedTextField(modifier = Modifier
+           .fillMaxWidth()
+           .menuAnchor(),
+            readOnly = true,
+           shape = MaterialTheme.shapes.medium,
+            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+            value = state.value,
+            onValueChange ={},
+            trailingIcon = {ExposedDropdownMenuDefaults.TrailingIcon(expanded = menuState)})
+        ExposedDropdownMenu(expanded = menuState, onDismissRequest = { menuState = false }) {
+            items.forEach {
+                DropdownMenuItem(text = { Column {
+                    Text(text = it, fontSize = MaterialTheme.typography.labelMedium.fontSize, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = when (it) {
+                            DonateType.SkillForgeAid.name->{"Providing help with acquiring vocational tools."}
+                            DonateType.HavenFund.name->{"Support vocational workers with their renting fees"}
+                            DonateType.CraftSpace.name->{"Assistance for securing workspaces."}
+                            else->{""}
+                        },
+                        fontSize = MaterialTheme.typography.labelSmall.fontSize
+                    )
+                } },
+                    onClick = { state.value = it;menuState=false})
+            }
+            
+        }
+    }
+
+}
+
+@Composable
+fun CustomTextField(label:String = "",modifier: Modifier, placeholder:String = "",type:TextType,textState: MutableState<String>){
+
+    val trailingIcon =
+        when (type) {
+            TextType.Email -> {
+                Icons.Rounded.Email
+            }
+
+            TextType.Phone -> {
+                Icons.Rounded.Phone
+            }
+
+            TextType.Person -> {
+                Icons.Rounded.Person
+            }
+
+            TextType.Address -> {Icons.Rounded.Place}
+            TextType.Edit->Icons.Rounded.Edit
+            TextType.Reason -> Icons.Rounded.QuestionAnswer
+        }
+
+    val keyboardType = when(type){
+        TextType.Email -> KeyboardType.Email
+        TextType.Phone -> KeyboardType.Phone
+        else -> KeyboardType.Text
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp) ,modifier = modifier) {
+        Text(text = "$label:", fontWeight = FontWeight.Bold, fontSize = MaterialTheme.typography.labelMedium.fontSize)
+        Surface(modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp), shape = MaterialTheme.shapes.medium) {
+            TextField(leadingIcon ={ Icon(imageVector = trailingIcon, contentDescription = "", tint = colorResource(
+                id = R.color.btn
+            ))},keyboardOptions = KeyboardOptions(keyboardType = keyboardType) , placeholder = { Text(text = placeholder, fontSize = MaterialTheme.typography.labelSmall.fontSize) }, value = textState.value, onValueChange = { update->textState.value=update},colors = TextFieldDefaults.colors(focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent))
+        }
+    }
+}
+
+
+
+@Preview(showBackground = true, showSystemUi = true,
+    uiMode = Configuration.UI_MODE_NIGHT_NO or Configuration.UI_MODE_TYPE_NORMAL,
+    wallpaper = Wallpapers.GREEN_DOMINATED_EXAMPLE,
+    device = "spec:width=1080px,height=2340px,dpi=440"
+)
+@Composable
+fun VocsPreview(){
+    JobGigTheme {
+        val state = rememberSaveable {
+            mutableDoubleStateOf(0.0)
+        }
+        val viewmodel:TutCreate = viewModel()
+       // GigAlert(uri = "", name = "Abdul", rating = 4.3, comment ="I like {$} his work" )
+        //DonateAsk()
+        //DonateB()
+        //DonateGive()
+        DonateWhy(rememberNavController())
+        //ManageTuts()
+        //Donate()
+        //CreateTuts(viewmodel)
+
+
+    }
+}
+
+enum class DonateType{
+    HavenFund,
+    CraftSpace,
+    SkillForgeAid
+}
+
+enum class TextType{
+    Email,
+    Phone,
+    Person,
+    Address,
+    Edit,
+    Reason
+
+}
+enum class TimeLine{
+    Daily,
+    Monthly,
+    ALlTime
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@Composable
+fun TutContent(openState: MutableState<Boolean>, label: String,data:SnapshotStateList<String>){
+    val textState = rememberSaveable {
+        mutableStateOf("")
+    }
+    Dialog(onDismissRequest = { openState.value=false }) {
+        Surface(tonalElevation = 32.dp, shape = MaterialTheme.shapes.extraLarge) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp),modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)) {
+                CustomTextField(modifier = Modifier, type =TextType.Edit, placeholder = "response here...", label = label, textState = textState)
+                Button(colors = ButtonDefaults.buttonColors(containerColor = colorResource(
+                    id = R.color.btn
+                ), contentColor = Color.White),shape = MaterialTheme.shapes.large,onClick = {
+                    data.add(textState.value)
+                    openState.value=false
+                }) {
+                    Text(text = "Add Content")
+                }
+            }
+        }
+    }
+}
+@Composable
+fun TutContent(openState: MutableState<Boolean>,viewmodel: TutCreate){
+    val textState = rememberSaveable {
+        mutableStateOf("")
+    }
+    val uri = rememberSaveable {
+        mutableStateOf("")
+    }
+    val launcher = rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia(), onResult = {
+        if (it!=null){
+            uri.value=it.toString()
+            viewmodel.tutContent.add(CourseContent(title = textState.value, uri =uri.value,"forever"))
+            openState.value=false
+        }
+    })
+    Dialog(onDismissRequest = { openState.value=false }) {
+        Surface(tonalElevation = 32.dp, shape = MaterialTheme.shapes.extraLarge) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp),modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)) {
+                Row {
+                    Text(text ="Note:", fontSize = MaterialTheme.typography.labelMedium.fontSize, fontWeight = FontWeight.Bold )
+                    Text(text = "each video should not exceed 15 minute", fontSize = MaterialTheme.typography.labelMedium.fontSize)
+                }
+                CustomTextField(modifier = Modifier, type =TextType.Edit, placeholder = "response here...", label = "Title", textState = textState)
+                Button(colors = ButtonDefaults.buttonColors(containerColor = colorResource(
+                    id = R.color.btn
+                ), contentColor = Color.White),shape = MaterialTheme.shapes.large,onClick = {
+                    launcher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
+                }) {
+                    Text(text = "Add Content")
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun TutContent(openState: MutableState<Boolean>, uri: Uri){
+    Dialog(onDismissRequest = { openState.value=false }) {
+        Surface(tonalElevation = 32.dp, shape = MaterialTheme.shapes.extraLarge) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp),modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)) {
+                AsyncImage(modifier = Modifier
+                    .size(100.dp)
+                    .clip(MaterialTheme.shapes.small),
+                    contentScale = ContentScale.FillBounds,
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(uri)
+                        .error(R.drawable.round_image_24)
+                        .build(),
+                    contentDescription ="" )
+            }
+        }
+    }
+}
+
+
+@Composable
+fun ProfileEdit(openState: MutableState<Boolean>, label: String,viewmodel: ProfileViewmodel, type:Int,ctx:Context){
+    val textState = rememberSaveable {
+        mutableStateOf("")
+    }
+    Dialog(onDismissRequest = { openState.value=false }) {
+        Surface(tonalElevation = 32.dp, shape = MaterialTheme.shapes.extraLarge) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp),modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)) {
+                CustomTextField(modifier = Modifier, type =TextType.Edit, placeholder = "response here...", label = label, textState = textState)
+                Button(colors = ButtonDefaults.buttonColors(containerColor = colorResource(
+                    id = R.color.btn
+                ), contentColor = Color.White),shape = MaterialTheme.shapes.large,onClick = {
+                    when(type){
+                        0->viewmodel.name = textState.value
+                        1->viewmodel.about = textState.value
+                        2->viewmodel.address = textState.value
+                    }
+                    viewmodel.saveProfile(ctx)
+                    openState.value=false
+                }) {
+                    Text(text = "Add Content")
+                }
+            }
+        }
+    }
+}
+
+
+
+
