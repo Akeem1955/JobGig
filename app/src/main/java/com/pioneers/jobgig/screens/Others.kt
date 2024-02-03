@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -103,6 +104,7 @@ import com.pioneers.jobgig.dataobj.utils.CourseContent
 import com.pioneers.jobgig.dataobj.utils.DonationRequest
 import com.pioneers.jobgig.sealed.HomeCardViews
 import com.pioneers.jobgig.ui.theme.JobGigTheme
+import com.pioneers.jobgig.viewmodels.DashboardViewmodel
 import com.pioneers.jobgig.viewmodels.DonateViewModel
 import com.pioneers.jobgig.viewmodels.OnBoardViewModel
 import com.pioneers.jobgig.viewmodels.ProfileViewmodel
@@ -244,7 +246,8 @@ fun TutUpload(openState: MutableState<Boolean>){
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ManageTuts(){
+fun ManageTuts(viewmodel: TutCreate,navController: NavController){
+    val ctx = LocalContext.current
     val uploadState = rememberSaveable {
         mutableStateOf(false)
     }
@@ -256,9 +259,25 @@ fun ManageTuts(){
     }
     if (uploadState.value){
         TutUpload(openState = uploadState)}
+    if(viewmodel.loadingState){
+        Dialog(onDismissRequest = { /*TODO*/ }) {
+            CircularProgressIndicator()
+        }
+    }
+    if(viewmodel.errorState){
+        Dialog(onDismissRequest = { viewmodel.errorState = false }) {
+            Surface(shape = MaterialTheme.shapes.large) {
+                Text(text = viewmodel.errorMsg, modifier = Modifier.padding(16.dp), fontSize = MaterialTheme.typography.labelMedium.fontSize)
+            }
+        }
+    }
+
+    LaunchedEffect(key1 = true){
+        viewmodel.getTutorial()
+    }
     Column(modifier = Modifier.fillMaxSize()) {
         Row(verticalAlignment = Alignment.CenterVertically,modifier = Modifier.fillMaxWidth()) {
-            IconButton(onClick = { /*TODO*/ }) {
+            IconButton(onClick = { if(navController.canGoBack)navController.popBackStack() }) {
                 Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "")
             }
             Text(modifier = Modifier.weight(1f,true),
@@ -272,7 +291,7 @@ fun ManageTuts(){
                    leadingIcon = { Icon(imageVector = Icons.Rounded.Search, contentDescription = "")},
                    query = queryState.value,
                    onQueryChange = {update->queryState.value = update},
-                   onSearch = {},
+                   onSearch = {viewmodel.filter(queryState.value);searchState.value=false},
                    active = searchState.value, onActiveChange = {update->searchState.value=update}) {
                }
                LazyColumn(contentPadding = PaddingValues(8.dp),verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -284,13 +303,10 @@ fun ManageTuts(){
                            }
                        }
                    }
-                   item { TutCard() }
-                   item { TutCard() }
-                   item { TutCard() }
-                   item { TutCard() }
-                   item { TutCard() }
-                   item { TutCard() }
-                   item { TutCard() }
+                   items(viewmodel.tutorial.value){item->
+                       TutCard(uri = item.uri, label = item.title)
+                   }
+
                }
            }
         }
@@ -308,17 +324,14 @@ fun TutItem(label: String, onClick:()->Unit){
 
 @Composable
 
-fun CreateTuts(viewmodel:TutCreate){
-    var thumburi by rememberSaveable {
-        mutableStateOf("")
-    }
+fun CreateTuts(viewmodel:TutCreate, navController: NavController){
+
     val thubnailStatus = rememberSaveable {
         mutableStateOf(false)
     }
     val photopick = rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia(), onResult ={uri->
-        if (uri != null)thumburi = uri.toString()
+        if (uri != null)viewmodel.thumburi.value = uri.toString()
     } )
-
     var label by rememberSaveable {
         mutableStateOf("Requirement")
     }
@@ -340,14 +353,37 @@ fun CreateTuts(viewmodel:TutCreate){
         })
     }
     if(thubnailStatus.value){
-        TutContent(openState = thubnailStatus, uri =Uri.parse(thumburi))
+        TutContent(openState = thubnailStatus, uri =Uri.parse(viewmodel.thumburi.value))
     }
+    if(viewmodel.loadingState){
+        Dialog(onDismissRequest = { /*TODO*/ }) {
+            CircularProgressIndicator()
+        }
+    }
+    if(viewmodel.errorState){
+        Dialog(onDismissRequest = { viewmodel.errorState = false }) {
+            Surface(shape = MaterialTheme.shapes.large) {
+                Text(text = viewmodel.errorMsg, modifier = Modifier.padding(16.dp), fontSize = MaterialTheme.typography.labelMedium.fontSize)
+            }
+        }
+    }
+    val ctx = LocalContext.current
 
     Column(modifier = Modifier.fillMaxSize()) {
+        Row(verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()) {
+            IconButton(onClick = { if(navController.canGoBack)navController.popBackStack()  }) {
+                Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "", tint = Color.White)
+            }
+            Text(textAlign = TextAlign.Center,modifier = Modifier.weight(1f),text = "Create Tutorial", fontWeight = FontWeight.Bold, color = Color.White)
+        }
         Surface(modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
+            .weight(1f, true)
             .statusBarsPadding()) {
-            LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),verticalArrangement = Arrangement.spacedBy(16.dp)){
+            LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)){
                 item {
                    CustomTextField(modifier = Modifier, label = "Tutorial Name", placeholder = "A.Vondi",type = TextType.Edit, textState = viewmodel.tutName)
                }
@@ -368,7 +404,7 @@ fun CreateTuts(viewmodel:TutCreate){
                             ) }) {
                                 Text(text = "Upload")
                             }
-                            if (thumburi.isNotBlank()){
+                            if (viewmodel.thumburi.value.isNotBlank()){
                                 IconButton(onClick = { thubnailStatus.value = true }) {
                                     Icon(imageVector = Icons.Rounded.UploadFile, contentDescription = "")
                                 }
@@ -423,7 +459,7 @@ fun CreateTuts(viewmodel:TutCreate){
                 item {
                     Button(modifier = Modifier.fillMaxWidth(),colors = ButtonDefaults.buttonColors(containerColor = colorResource(
                         id = R.color.btn
-                    ), contentColor = Color.White),shape = MaterialTheme.shapes.medium,onClick = { /*TODO*/ }) {
+                    ), contentColor = Color.White),shape = MaterialTheme.shapes.medium,onClick = { viewmodel.createTut(ctx) }) {
                         Text(text = "Create Tutorial")
                     }
                 }
@@ -434,24 +470,25 @@ fun CreateTuts(viewmodel:TutCreate){
 }
 
 @Composable
-fun VocationalDashboard(){
+fun VocationalDashboard(navController: NavController, viewmodel: DashboardViewmodel){
     val timeline = rememberSaveable {
         mutableStateOf(TimeLine.Daily)
     }
-    Box {
+    Column{
         Surface {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp),modifier = Modifier.fillMaxSize()) {
                 Row (verticalAlignment = Alignment.CenterVertically,modifier = Modifier.fillMaxWidth()){
-                    AsyncImage(contentScale = ContentScale.Crop,modifier = Modifier
-                        .size(50.dp)
-                        .clip(
-                            CircleShape
-                        ),model = ImageRequest.Builder(LocalContext.current).placeholder(R.drawable.kniting).build(), contentDescription = "")
-                    Text(text = "Hi, Adebisi", modifier = Modifier.weight(1f,true), fontSize = MaterialTheme.typography.labelSmall.fontSize, fontWeight = FontWeight.Bold)
-                    Text(text = "Create And Share",fontSize = MaterialTheme.typography.labelSmall.fontSize, fontWeight = FontWeight.Bold, color = colorResource(
+                    AsyncImage(contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clip(CircleShape),
+                        model = ImageRequest.Builder(LocalContext.current).placeholder(R.drawable.kniting).build(),
+                        contentDescription = "")
+                    Text(text = "Hi, ${OnBoardViewModel.currentUser.fullname}", modifier = Modifier.weight(1f,true), fontSize = MaterialTheme.typography.labelSmall.fontSize, fontWeight = FontWeight.Bold)
+                    Text(text = "${if(OnBoardViewModel.currentUser.tutCreated)"Upload" else "Create"} Tutorial",fontSize = MaterialTheme.typography.labelSmall.fontSize, fontWeight = FontWeight.Bold, color = colorResource(
                         id = R.color.btn
                     ))
-                    IconButton(onClick = { /*TODO*/ }) {
+                    IconButton(onClick = {navController.navigate(if(OnBoardViewModel.currentUser.tutCreated)ScreenRoute.CreateTutorial.route else ScreenRoute.UploadTutorial.route)  }) {
                         Icon(imageVector = Icons.Rounded.ArrowForward, contentDescription = "", tint = colorResource(
                             id = R.color.btn
                         ))
@@ -464,10 +501,10 @@ fun VocationalDashboard(){
                     TimelineHelper(timeline = timeline, type = TimeLine.ALlTime, text ="All Time" )
                 }
                 LazyVerticalGrid(horizontalArrangement = Arrangement.spacedBy(16.dp),verticalArrangement = Arrangement.spacedBy(16.dp),contentPadding = PaddingValues(16.dp),columns = GridCells.Adaptive(150.dp)){
-                    item { TimelineCard(label = "23", content = "Total Tutorials") }
-                    item { TimelineCard(label = "23,000", content = "Total Subscribed") }
-                    item { TimelineCard(label = "4.1", content = "OverAll Rating") }
-                    item { TimelineCard(label = "90k", content = "Total Views") }
+                    item { TimelineCard(label = "${viewmodel.data.value.content.size}", content = "Total Tutorials") }
+                    item { TimelineCard(label = "${viewmodel.data.value.learners}", content = "Total Subscribed") }
+                    item { TimelineCard(label = "${viewmodel.data.value.rating}", content = "OverAll Rating") }
+                    item { TimelineCard(label = "${viewmodel.data.value.comments.size}", content = "Total Comments") }
                 }
                 LazyColumn(contentPadding = PaddingValues(8.dp)){
                     item { HomeCardView(type = HomeCardViews.Courses, navController = rememberNavController(), route =ScreenRoute.HomeScreenCourse.route ) }
@@ -501,13 +538,26 @@ fun TimelineCard(label: String, content:String){
 @Composable
 fun RequestVerification(viewmodel:VocViewmodel,navController: NavController){
     val ctx = LocalContext.current
-    //if(viewmod)
+    if(viewmodel.loadingState){
+        Dialog(onDismissRequest = { /*TODO*/ }) {
+            CircularProgressIndicator()
+        }
+    }
+    if(viewmodel.errorState){
+        Dialog(onDismissRequest = { viewmodel.errorState = false }) {
+            Surface(shape = MaterialTheme.shapes.large) {
+                Text(text = viewmodel.errorMsg, modifier = Modifier.padding(16.dp), fontSize = MaterialTheme.typography.labelMedium.fontSize)
+            }
+        }
+    }
     Column(modifier = Modifier
         .fillMaxSize()
         .background(color = colorResource(id = R.color.btn))) {
         Row(verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()) {
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()) {
             IconButton(onClick = { if(navController.canGoBack)navController.popBackStack()  }) {
                 Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "", tint = Color.White)
             }
@@ -519,7 +569,9 @@ fun RequestVerification(viewmodel:VocViewmodel,navController: NavController){
             LazyColumn(contentPadding = PaddingValues(vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxSize()) {
+                modifier = Modifier
+                    .fillMaxSize()
+                    .navigationBarsPadding()) {
                 item {
                     CustomTextField(modifier = Modifier.padding(horizontal = 16.dp), label = "Email", placeholder = "adetun@gmail.com",type = TextType.Email,textState = viewmodel.email)
                 }
@@ -624,7 +676,7 @@ fun RequestVerification(viewmodel:VocViewmodel,navController: NavController){
 }
 
 @Composable
-fun DonateAsk(viewModel: DonateViewModel){
+fun DonateAsk(viewModel: DonateViewModel,navController: NavController){
     val textState = rememberSaveable {
         mutableStateOf("")
     }
@@ -637,7 +689,7 @@ fun DonateAsk(viewModel: DonateViewModel){
     if (notQualify){
         Dialog(onDismissRequest = { notQualify = false}) {
             Surface(shape = MaterialTheme.shapes.large, tonalElevation = 32.dp) {
-                Text(text = "You are Not A Vocational Worker...")
+                Text(text = "You are Not A Vocational Worker...",modifier = Modifier.padding(16.dp), fontSize = MaterialTheme.typography.labelMedium.fontSize)
             }
         }
     }
@@ -657,16 +709,19 @@ fun DonateAsk(viewModel: DonateViewModel){
     Column(modifier = Modifier
         .fillMaxSize()
         .background(color = colorResource(id = R.color.btn))) {
-        Row(verticalAlignment = Alignment.CenterVertically,horizontalArrangement = Arrangement.SpaceBetween,modifier = Modifier.fillMaxWidth()) {
-            IconButton(onClick = { /*TODO*/ }) {
+        Row(verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()) {
+            IconButton(onClick = {if(navController.canGoBack) navController.popBackStack()}) {
                 Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "", tint = Color.White)
             }
             Text(textAlign = TextAlign.Center,modifier = Modifier.weight(1f),text = "Request For Vocational Support", fontWeight = FontWeight.Bold, color = Color.White)
         }
 
         Surface(modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding(),
+            .fillMaxSize(),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp),horizontalAlignment = Alignment.CenterHorizontally,modifier = Modifier
                 .fillMaxWidth()
@@ -788,8 +843,8 @@ fun DonateGiveCard(type:DonateType, onClick: () -> Unit,req:DonationRequest){
 
 @Composable
 fun DonateGive(viewModel: DonateViewModel,navController: NavController, type:DonateType){
-    Column(modifier = Modifier.fillMaxSize()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+    Column(modifier = Modifier.fillMaxSize().background(color = colorResource(id = R.color.btn))) {
+        Row(modifier = Modifier.statusBarsPadding(),verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { if (navController.canGoBack)navController.popBackStack() }) {
                 Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "")
             }
@@ -815,8 +870,10 @@ fun DonateGive(viewModel: DonateViewModel,navController: NavController, type:Don
 fun DonateWhy(navController: NavController){
     val whyitwork = stringArrayResource(id = R.array.why_it_works)
     val whyitworkHeader = stringArrayResource(id = R.array.header)
-    Column(modifier = Modifier.fillMaxSize()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .background(color = colorResource(id = R.color.btn))) {
+        Row(modifier = Modifier.statusBarsPadding(),verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { if(navController.canGoBack)navController.popBackStack()}) {
                 Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "")
             }
@@ -825,9 +882,10 @@ fun DonateWhy(navController: NavController){
         Surface(modifier = Modifier
             .weight(1f)
             .fillMaxWidth()) {
-            LazyColumn(contentPadding = PaddingValues(vertical = 16.dp),verticalArrangement = Arrangement.spacedBy(16.dp)){
-                item { HomeCardView(type = HomeCardViews.DonateMoney, navController = navController, route =ScreenRoute.DonateGive.route ) }
-                item { HomeCardView(type = HomeCardViews.ProvideWorkspace, navController = navController, route = ScreenRoute.DonateGive.route) }
+            LazyColumn(modifier = Modifier.navigationBarsPadding(),contentPadding = PaddingValues(vertical = 16.dp),verticalArrangement = Arrangement.spacedBy(16.dp)){
+                item { HomeCardView(type = HomeCardViews.DonateMoney, navController = navController, route =ScreenRoute.DonateGive.route(DonateType.SkillForgeAid.name) ) }
+                item { HomeCardView(type = HomeCardViews.ProvideWorkspace, navController = navController, route = ScreenRoute.DonateGive.route(DonateType.CraftSpace.name)) }
+                item { Spacer(modifier = Modifier.height(16.dp)) }
                 item {
                     Text(text = "Why Your Donation Works", fontWeight = FontWeight.Bold,
                         fontSize = MaterialTheme.typography.titleLarge.fontSize,
@@ -975,12 +1033,13 @@ fun VocsPreview(){
         val state = rememberSaveable {
             mutableDoubleStateOf(0.0)
         }
-        val viewmodel:TutCreate = viewModel()
+       // val viewmodel:TutCreate = viewModel()
        // GigAlert(uri = "", name = "Abdul", rating = 4.3, comment ="I like {$} his work" )
         //DonateAsk()
         //DonateB()
         //DonateGive()
-        DonateWhy(rememberNavController())
+        //TutCard(label = "Hello World")
+        //DonateWhy(rememberNavController())
         //ManageTuts()
         //Donate()
         //CreateTuts(viewmodel)

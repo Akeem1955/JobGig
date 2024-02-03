@@ -6,7 +6,7 @@ sealed class ScreenRoute(var route: String){
     object  ForgetPassword: ScreenRoute("forget_password")
     object  Signup: ScreenRoute("signup")
     object  Auth:ScreenRoute("auth")
-    object  Home:ScreenRoute("home")
+    object  HomeEntry:ScreenRoute("home")
     object  Main:ScreenRoute("main")
     object  HomeScreenCourse:ScreenRoute("home_online_course")
     object  SearchCourse:ScreenRoute("searchCourses")
@@ -39,25 +39,30 @@ sealed class ScreenRoute(var route: String){
     }
 
 
-    object ServiceSearch:ScreenRoute("")
-    object ServiceVocOnline:ScreenRoute("")
-    object ServiceVocInfo:ScreenRoute("")
-    object ServiceSession:ScreenRoute("")
-    object ServiceChat:ScreenRoute("")
-    object ServiceRate:ScreenRoute("")
+    object ServiceSearch:ScreenRoute("service_search")
+    object ServiceVocOnline:ScreenRoute("service_voc_online")
+    object ServiceVocInfo:ScreenRoute("service_voc_info")
+    object ServiceSession:ScreenRoute("service_session")
+    object ServiceChat:ScreenRoute("service_chat")
+    object ServiceRate:ScreenRoute("service_rate")
 
 
 
-    object ProfileEdit:ScreenRoute("")//done
-    object Donate:ScreenRoute("")//done
-    object DonateSeek:ScreenRoute("")//dones
-    object DonateGive:ScreenRoute("")//dones
-    object DonateWhy:ScreenRoute("")//done
+    object ProfileEdit:ScreenRoute("profile_edit")//done
+    object Donate:ScreenRoute("donate")//done
+    object DonateSeek:ScreenRoute("donate_seek")//dones
+    object DonateGive:ScreenRoute("donate_give/{type}"){
+        fun route(type:String): String {
+            return "donate_give/$type"
+        }
+    }
+    object DonateWhy:ScreenRoute("donate_why")//done
 
-    object VocDashBoard:ScreenRoute("")//dones
-    object VocRequest:ScreenRoute("")//dones
-    object CreateTutorial:ScreenRoute("")//dones
-    object UploadTutorial:ScreenRoute("")//dones
+    object VocDashBoard:ScreenRoute("voc_dashboard")//dones
+    object VocRequest:ScreenRoute("voc_request")//dones
+    object CreateTutorial:ScreenRoute("create_tut")//dones
+    object UploadTutorial:ScreenRoute("upload_tut")//dones
+    object GigAlert:ScreenRoute("gig_alert")
 
 
 }

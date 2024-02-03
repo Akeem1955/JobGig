@@ -1,31 +1,22 @@
 package com.pioneers.jobgig.screens
 
-import android.content.res.Configuration
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowForwardIos
-import androidx.compose.material.icons.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.CardGiftcard
-import androidx.compose.material.icons.rounded.Handyman
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Notifications
-import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.SpaceDashboard
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,40 +28,30 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.key.Key.Companion.U
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import coil.ImageLoader
+import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import coil.compose.AsyncImagePainter.State.Empty.painter
-import coil.decode.ImageSource
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.pioneers.jobgig.R
 import com.pioneers.jobgig.sealed.HomeCardViews
-import com.pioneers.jobgig.services.preference.datastore
-import com.pioneers.jobgig.ui.theme.JobGigTheme
 import com.pioneers.jobgig.viewmodels.OnBoardViewModel
 
 
@@ -79,6 +60,7 @@ fun HomeCardView(type:HomeCardViews, navController: NavController, route:String)
     Surface(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { navController.navigate(route=route) }
             .padding(horizontal = 16.dp),
         tonalElevation = 24.dp,
         shape = MaterialTheme.shapes.medium) {
@@ -110,12 +92,10 @@ fun HomeCardView(type:HomeCardViews, navController: NavController, route:String)
 
 @Composable
 fun HomeScreen(navController: NavController){
-    val currentUser by remember {
-        mutableStateOf(Firebase.auth.currentUser)
-    }
+    val currentUser=Firebase.auth.currentUser
     val headColor =colorResource(id = R.color.btn)
 
-    Scaffold(containerColor = headColor, bottomBar = { BottomItem(navController)}) {
+    Scaffold(containerColor = headColor) {
         Column(modifier = Modifier.fillMaxSize()) {
             Row(verticalAlignment = Alignment.CenterVertically,horizontalArrangement = Arrangement.SpaceBetween,modifier = Modifier
                 .padding(top = it.calculateTopPadding(), start = 16.dp, end = 16.dp, bottom = 8.dp)
@@ -126,12 +106,13 @@ fun HomeScreen(navController: NavController){
                         .decoderFactory(SvgDecoder.Factory())
                         .placeholder(R.drawable.round_account_circle_24)
                         .crossfade(500)
-                        .data(currentUser?.photoUrl)
-                        .error(R.drawable.kniting)
-                        .placeholder(R.drawable.kniting)
+                        .data(OnBoardViewModel.currentUser.profilePic)
+                        .error(R.drawable.round_account_circle_24)
+                        .placeholder(R.drawable.round_account_circle_24)
                         .build(),
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
+                            .clickable { navController.navigate(ScreenRoute.ProfileEdit.route) }
                             .size(50.dp)
                             .clip(CircleShape),
                         contentDescription ="" )
@@ -145,7 +126,7 @@ fun HomeScreen(navController: NavController){
                         .align(Alignment.TopEnd)
                         .size(10.dp)
                         .clip(CircleShape)){
-                        Text(text = "9", textAlign = TextAlign.Center, fontSize = 6.sp )
+                        Text(text = "0", textAlign = TextAlign.Center, fontSize = 6.sp )
                     }
                 }
             }
@@ -160,19 +141,30 @@ fun HomeScreen(navController: NavController){
                 }
             }
         }
+    }
+}
 
+@Composable
+fun HomeContainer(navController: NavHostController) {
+    val mainNav = rememberNavController()
+    val headColor =colorResource(id = R.color.btn)
+
+    Scaffold(containerColor = headColor, bottomBar = { BottomItem(mainNav)}) {
+        ScreenNavMain(mainnav = navController,navHostController = mainNav, modifier = Modifier
+            .fillMaxSize()
+            .padding(top = it.calculateTopPadding()))
     }
 }
 
 
 @Composable
 fun BottomItem(navController: NavController){
-    var route:ScreenRoute by rememberSaveable {
-        mutableStateOf(ScreenRoute.Main)
+    var route by rememberSaveable {
+        mutableStateOf(ScreenRoute.Main.route)
     }
    NavigationBar {
-       NavigationBarItem(selected = route.route == ScreenRoute.Main.route,
-           onClick = { route = ScreenRoute.Main; navController.navigate(ScreenRoute.Main.route)},
+       NavigationBarItem(selected = route == ScreenRoute.Main.route,
+           onClick = { route = ScreenRoute.Main.route; navController.navigate(ScreenRoute.Main.route)},
            label = { Text(text = "Home") },
            icon = {
                Icon(
@@ -181,8 +173,8 @@ fun BottomItem(navController: NavController){
                )
            })
       if (OnBoardViewModel.currentUser.verified){
-          NavigationBarItem(selected = route.route == ScreenRoute.VocDashBoard.route,
-              onClick = { route = ScreenRoute.VocDashBoard;navController.navigate(ScreenRoute.VocDashBoard.route)},
+          NavigationBarItem(selected = route == ScreenRoute.VocDashBoard.route,
+              onClick = { route = ScreenRoute.VocDashBoard.route;navController.navigate(ScreenRoute.VocDashBoard.route)},
               label = { Text(text = "Dashboard") },
               icon = {
                   Icon(
@@ -191,8 +183,8 @@ fun BottomItem(navController: NavController){
                   )
               })
       }
-       NavigationBarItem(selected = route.route == ScreenRoute.Donate.route,
-           onClick = { route = ScreenRoute.Donate;navController.navigate(ScreenRoute.Donate.route)},
+       NavigationBarItem(selected = route == ScreenRoute.Donate.route,
+           onClick = { route = ScreenRoute.Donate.route;navController.navigate(ScreenRoute.Donate.route)},
            label = { Text(text = "Support") },
            icon = {
                Icon(
@@ -205,13 +197,7 @@ fun BottomItem(navController: NavController){
 }
 
 
-@Preview
-@Composable
-fun HomePreview(){
-    JobGigTheme {
-        //HomeScreen()
-    }
-}
+
 
 
 val NavController.canGoBack:Boolean

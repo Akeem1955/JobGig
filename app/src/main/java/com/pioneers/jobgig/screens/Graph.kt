@@ -1,20 +1,14 @@
 package com.pioneers.jobgig.screens
 
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextMotion.Companion.Animated
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -22,18 +16,19 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import com.pioneers.jobgig.viewmodels.CourseViewModel
+import com.pioneers.jobgig.viewmodels.DashboardViewmodel
+import com.pioneers.jobgig.viewmodels.DonateViewModel
 import com.pioneers.jobgig.viewmodels.OnBoardViewModel
+import com.pioneers.jobgig.viewmodels.ProfileViewmodel
+import com.pioneers.jobgig.viewmodels.TutCreate
+import com.pioneers.jobgig.viewmodels.VocConnectViewModel
+import com.pioneers.jobgig.viewmodels.VocViewmodel
 
 @Composable
-fun ScreenNav(navHostController: NavHostController){
-    NavHost(navController = navHostController, startDestination = "courseSection"){
+fun ScreenNav(navHostController: NavHostController,start:String){
+    NavHost(navController = navHostController, startDestination = start){
         composable(route = ScreenRoute.GetStarted.route){
             GettingStarted(navHostController = navHostController)
         }
@@ -56,8 +51,6 @@ fun ScreenNav(navHostController: NavHostController){
 
 
         }
-
-
         navigation(startDestination = ScreenRoute.HomeScreenCourse.route, route = "courseSection" ){
 
             composable(route = ScreenRoute.SearchCourse.route){
@@ -126,8 +119,90 @@ fun ScreenNav(navHostController: NavHostController){
             }
 
         }
+        navigation(ScreenRoute.ServiceSearch.route,"Service"){
+            composable(route = ScreenRoute.ServiceSearch.route){
+                val viewmodel = it.sharedViewModel<VocConnectViewModel>(navController = navHostController)
+                ServiceSearch(viewmodel =viewmodel , navController = navHostController)
+            }
+            composable(route = ScreenRoute.ServiceChat.route){
+                val viewmodel = it.sharedViewModel<VocConnectViewModel>(navController = navHostController)
+                ServiceChat(viewmodel = viewmodel, navController = navHostController)
+            }
+            composable(route = ScreenRoute.ServiceSession.route){
+                val viewmodel = it.sharedViewModel<VocConnectViewModel>(navController = navHostController)
+                ServiceSession(viewmodel = viewmodel, navController = navHostController)
+            }
+            composable(route = ScreenRoute.ServiceRate.route){
+                Box(contentAlignment = Alignment.Center,modifier = Modifier.fillMaxSize()) {
+                    Text(text = "Not Yet Implemented Sorry....")
+                }
+            }
+            composable(route = ScreenRoute.ServiceVocInfo.route){
+                val viewmodel = it.sharedViewModel<VocConnectViewModel>(navController = navHostController)
+                ServiceVocInfo(viewmodel = viewmodel, navController = navHostController)
+            }
+            composable(route = ScreenRoute.ServiceVocOnline.route){
+                val viewmodel = it.sharedViewModel<VocConnectViewModel>(navController = navHostController)
+                ServiceVocOnline(viewmodel = viewmodel, navController =navHostController )
+            }
+        }
+        composable(route = ScreenRoute.ProfileEdit.route){
+            val viewmodel:ProfileViewmodel = viewModel()
+            ProfileSetting(viewmodel = viewmodel,navHostController)
+        }
+        composable(route = ScreenRoute.DonateSeek.route){
+            val viewmodel:DonateViewModel = viewModel()
+            DonateAsk(viewModel = viewmodel,navHostController)
+        }
+        composable(route = ScreenRoute.DonateWhy.route){
+            DonateWhy(navController = navHostController)
+        }
+        composable(route = ScreenRoute.DonateGive.route,arguments = listOf(
+            navArgument(name = "type"){
+                type = NavType.StringType
+                defaultValue = DonateType.SkillForgeAid.name
+            }
+        )){
+            val type = it.arguments?.getString("type")?.let { it1 -> DonateType.valueOf(it1) }?:DonateType.SkillForgeAid
+            val viewmodel:DonateViewModel = viewModel()
+            DonateGive(viewModel = viewmodel, navController =navHostController , type = type)
+        }
+        composable(route = ScreenRoute.VocRequest.route){
+            val viewmodel:VocViewmodel = viewModel()
+            RequestVerification(viewmodel = viewmodel, navController = navHostController)
+        }
+        composable(route = ScreenRoute.UploadTutorial.route){
+            val viewmodel:TutCreate = viewModel()
+            ManageTuts(viewmodel = viewmodel, navController =navHostController )
+        }
+        composable(route = ScreenRoute.CreateTutorial.route){
+            val viewmodel:TutCreate= viewModel()
+            CreateTuts(viewmodel = viewmodel, navController = navHostController)
+        }
+        composable(route = ScreenRoute.HomeEntry.route){
+            HomeContainer(navHostController)
+        }
     }
 }
+
+
+@Composable
+fun ScreenNavMain(mainnav:NavHostController,navHostController: NavHostController,modifier: Modifier){
+    NavHost(modifier = modifier,navController = navHostController, startDestination = ScreenRoute.Main.route){
+        composable(route = ScreenRoute.Main.route){
+            HomeScreen(navController = mainnav)
+        }
+        composable(route = ScreenRoute.VocDashBoard.route){
+            val viewmodel:DashboardViewmodel = viewModel()
+            VocationalDashboard(navController = mainnav, viewmodel = viewmodel)
+        }
+        composable(route = ScreenRoute.Donate.route){
+            Donate(navController = mainnav)
+        }
+
+    }
+}
+
 
 
 @Composable

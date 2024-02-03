@@ -241,7 +241,9 @@ fun CourseInfo(
                             }
                         }
                     }
-                    CourseInfoDesign.InstructorDesign -> Unit
+                    CourseInfoDesign.InstructorDesign -> {
+                        Unit
+                    }
                 }
             }
             CourseContentDesign.Single ->{

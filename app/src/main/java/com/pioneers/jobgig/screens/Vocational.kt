@@ -3,6 +3,7 @@ package com.pioneers.jobgig.screens
 import android.content.res.Configuration
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -62,24 +63,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.android.gms.location.LocationServices
-import com.google.android.play.integrity.internal.t
 import com.pioneers.jobgig.ChatRoom
 import com.pioneers.jobgig.R
 import com.pioneers.jobgig.UserMessage
-import com.pioneers.jobgig.ui.theme.JobGigTheme
 import com.pioneers.jobgig.viewmodels.VocConnectViewModel
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -105,8 +102,7 @@ fun ServiceSearch(viewmodel:VocConnectViewModel, navController: NavController){
             }
         }
     }
-    Surface{
-
+    Surface(color = MaterialTheme.colorScheme.background){
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             SearchCourseBtn(query = viewmodel.query,
                 onQuery = {update->viewmodel.updateQuery(update)},
@@ -118,8 +114,9 @@ fun ServiceSearch(viewmodel:VocConnectViewModel, navController: NavController){
             Text(text = "Categories", fontWeight = FontWeight.Bold, fontSize = MaterialTheme.typography.headlineSmall.fontSize)
             Flows(items = viewmodel.vocCategory,
                 Modifier
-                    .weight(1f)
-                    .padding(horizontal = 12.dp))
+                    .weight(1f, true)
+                    .padding(horizontal = 12.dp), onSearch = {update->viewmodel.updateQuery(update) ;state = viewmodel.filteredVoc.isEmpty()
+                    onSearch(viewmodel, navController)})
         }
     }
 
@@ -143,8 +140,15 @@ fun ServiceVocOnline(viewmodel: VocConnectViewModel, navController: NavControlle
                         .weight(2f)
                         .fillMaxWidth(),locationServices =locationServices , viewModel = viewmodel, polyline = null,workers = viewmodel.thoseUserLatLng.value)
                     LazyColumn(modifier = Modifier.weight(1f)){
-                        items(viewmodel.availableWorker.value){ item ->
+                        items(viewmodel.availableWorker){ item ->
                             WorkerCards(onClick = {viewmodel.selectUser(item.pos);navController.navigate(route = ScreenRoute.ServiceVocInfo.route)} ,profilePic = item.profilePic, name = item.name, distance = item.distance, ratings = item.rating, duration =item.duration )
+                        }
+                        item {
+                            if(viewmodel.availableWorker.isEmpty()){
+                                Box(contentAlignment = Alignment.Center ,modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).fillMaxHeight()) {
+                                    Text(text = "No Available Worker.... Sorry!!!", fontSize = MaterialTheme.typography.bodyLarge.fontSize, fontWeight = FontWeight.Bold)
+                                }
+                            }
                         }
                     }
                 }
@@ -358,7 +362,7 @@ fun Header(title:String){
 }
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun Flows(items:List<String>,modifier:Modifier){
+fun Flows(items:List<String>, modifier:Modifier, onSearch: (query: String) -> Unit){
     val scrollState = rememberScrollState()
     FlowRow(verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -366,13 +370,13 @@ fun Flows(items:List<String>,modifier:Modifier){
             .fillMaxSize()
             .verticalScroll(state = scrollState)) {
         items.forEach { item->
-            LazyGrids(item = item)
+            LazyGrids(item = item, onSearch = { q->onSearch(q)})
         }
     }
 }
 @Composable
-fun LazyGrids(item:String){
-    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceVariant) {
+fun LazyGrids(item:String, onSearch: (query: String) -> Unit){
+    Surface(modifier = Modifier.clickable { onSearch(item) },shape = MaterialTheme.shapes.large,tonalElevation = 24.dp) {
         Text(text = item, modifier = Modifier
             .padding(16.dp)
             .wrapContentSize(), fontSize = MaterialTheme.typography.bodySmall.fontSize, fontWeight = FontWeight.Bold)

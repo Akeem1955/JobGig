@@ -9,13 +9,25 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.core.app.NotificationManagerCompat
 
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -33,16 +45,24 @@ import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.toObject
+import com.pioneers.jobgig.dataobj.utils.User
 import com.pioneers.jobgig.screens.CallScreenManager
 import com.pioneers.jobgig.screens.HomeScreen
 import com.pioneers.jobgig.screens.ProfileSetting
+import com.pioneers.jobgig.screens.ScreenNav
+import com.pioneers.jobgig.screens.ScreenRoute
 import com.pioneers.jobgig.screens.Simulator
 import com.pioneers.jobgig.ui.theme.JobGigTheme
+import com.pioneers.jobgig.viewmodels.OnBoardViewModel
+import kotlinx.coroutines.tasks.await
 
 class MainActivity : ComponentActivity() {
-    val db = Firebase.firestore.collection("Courses")
+//    val db = Firebase.firestore.collection("Courses")
 
+    var keep = true
 
     val LocalHost = compositionLocalOf { SnackbarHostState() }
 
@@ -50,34 +70,14 @@ class MainActivity : ComponentActivity() {
     //val Context.datastore by dataStore("app_preference.json",PreferenceSerializer)
 
     // See: https://developer.android.com/training/basics/intents/result
-    private val signInLauncher = registerForActivityResult(
-        FirebaseAuthUIActivityResultContract(),
-    ) { res ->
-        this.onSignInResult(res)
-    }
-
-    private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult?) {
-
-        val response = result?.idpResponse
-        if (result != null) {
-            if (result.resultCode == RESULT_OK) {
-                // Successfully signed in
-                val user = FirebaseAuth.getInstance().currentUser
-                println(user.toString())
-                println(user?.email)
-            } else {
-                println("Error Happened")
-            }
-        }
-
-    }
 
 
-   // @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
        NotificationManagerCompat.from(applicationContext).cancel(1957)
-        installSplashScreen()
+        installSplashScreen().setKeepOnScreenCondition(){keep}
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.light(scrim = android.graphics.Color.TRANSPARENT, darkScrim = android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.light(scrim = android.graphics.Color.TRANSPARENT, darkScrim = android.graphics.Color.TRANSPARENT)
@@ -87,12 +87,58 @@ class MainActivity : ComponentActivity() {
 //           signalingClient = SignalingClient(),
 //           peerConnectionFactory = StreamPeerConnectionFactory(this)
 //       )
-
-
+        val user = Firebase.auth.currentUser
 //        Authenticate()
         setContent {
             JobGigTheme {
-
+                var loadingState by rememberSaveable {
+                    mutableStateOf(false)
+                }
+                var retry by rememberSaveable {
+                    mutableIntStateOf(0)
+                }
+                var errorState by rememberSaveable {
+                    mutableStateOf(false)
+                }
+                var errorMsg by rememberSaveable {
+                    mutableStateOf("")
+                }
+                if(loadingState){
+                    Dialog(onDismissRequest = { /*TODO*/ }) {
+                        CircularProgressIndicator()
+                    }
+                }
+                if(errorState){
+                    Dialog(onDismissRequest = { loadingState=true;errorState = false;retry++ }) {
+                        Surface(shape = MaterialTheme.shapes.large) {
+                            Text(text = errorMsg, modifier = Modifier.padding(16.dp), fontSize = MaterialTheme.typography.labelMedium.fontSize)
+                        }
+                    }
+                }
+                if (user == null || !user.isEmailVerified){
+                    keep=false
+                    ScreenNav(navHostController = rememberNavController(), start =ScreenRoute.GetStarted.route )
+                }
+                else if(user.isEmailVerified){
+                    LaunchedEffect(key1 = retry){
+                       try {
+                           loadingState=true
+                           OnBoardViewModel.currentUser =
+                               Firebase.firestore.collection("Users").document(user.uid).get().await().toObject<User>()!!
+                           loadingState =false
+                       }catch (e:Exception){
+                           loadingState=false
+                           errorState = true
+                           errorMsg = "ouch!!! unexpected error check your connection and  retry"
+                           e.printStackTrace()
+                           println(e.message)
+                       }
+                    }
+                    if (!loadingState && !errorState){
+                        keep=false
+                        ScreenNav(navHostController = rememberNavController(), start =ScreenRoute.HomeEntry.route )
+                    }
+                }
 //                NavHost(navController = rememberNavController(), startDestination = "alert"){
 //                    composable("alert"){
 //                        Simulator()
@@ -101,7 +147,7 @@ class MainActivity : ComponentActivity() {
 //                        navDeepLink {
 //                            uriPattern = "jobgig://confirm-gig/{data}"
 //                            action = Intent.ACTION_VIEW
-//                        }
+//                [-]        }
 //                    ),
 //                        arguments = listOf(
 //                            navArgument(name = "data"){
@@ -151,7 +197,7 @@ class MainActivity : ComponentActivity() {
 //                var uri by remember {
 //                    mutableStateOf("")
 //                }
-                val scope = rememberCoroutineScope()
+                //val scope = rememberCoroutineScope()
 //                Box (modifier = Modifier
 //                    .fillMaxSize()
 //                    .background(color = Color(android.graphics.Color.parseColor("#F2EAD5")))){

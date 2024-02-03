@@ -43,7 +43,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -52,18 +51,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import com.google.firebase.FirebaseApp
 import com.pioneers.jobgig.R
-import com.pioneers.jobgig.ui.theme.JobGigTheme
 import com.pioneers.jobgig.viewmodels.OnBoardViewModel
-
-
 
 
 @Composable
@@ -138,7 +131,7 @@ fun Login(modifier: Modifier, viewModel: OnBoardViewModel, navController: NavCon
     }
     LaunchedEffect(key1 = viewModel.sucess){
         if(viewModel.sucess){
-            navController?.navigate(route = ScreenRoute.Main.route){popUpTo(route = ScreenRoute.Auth.route){inclusive=true} }
+            navController?.navigate(route = ScreenRoute.HomeEntry.route){popUpTo(route = ScreenRoute.Auth.route){inclusive=true} }
         }
     }
     val passwordIcon = if (passwordVisibility.value) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff
@@ -338,7 +331,7 @@ fun SignUpScreen(viewModel: OnBoardViewModel, navController: NavController?){
             Signup(navController = navController,viewModel = viewModel,modifier = Modifier
                 .fillMaxSize()
                 .padding(top = it.calculateTopPadding() + 50.dp))
-            IconButton(modifier = Modifier.padding(top = it.calculateTopPadding()) ,onClick = { navController?.popBackStack()}) {
+            IconButton(modifier = Modifier.padding(top = it.calculateTopPadding()) ,onClick = { if (navController?.canGoBack == true)navController.popBackStack()}) {
                 Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "", tint = Color.White)
             }
 

@@ -8,11 +8,13 @@ data class Comment(var name:String="", var profilePic:String?="", var comment:St
 
 data class Course(var temp:Int? = null)
 data class User(var profilePic:String = "",
+                var tutCreated:Boolean = false,
+                var tutList: String="",
                 var phone:String="",
                 var email:String="",
                 var fullname:String = "",
                 var rating: Double = 0.0,
-                var currentLocation:LatLng = LatLng(0.0,0.0),
+                var currentLocation:LatLngs = LatLngs(0.0,0.0),
                 var online:Boolean = false,
                 var comments:List<Comment> = emptyList(),
                 var imageOfPrevWork:List<String> = emptyList(),
@@ -22,7 +24,10 @@ data class User(var profilePic:String = "",
                 var currentSession:String = "",
                 var vocationalType:String ="",
                 var address:String ="",
-                var description:String="",var introVideo:String = "",var uid:String ="",var alert:String=""
+                var description:String="",
+                var introVideo:String = "",
+                var uid:String ="",
+                var alert:String=""
     )
 
 

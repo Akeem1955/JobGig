@@ -25,6 +25,7 @@ import com.pioneers.jobgig.dataobj.retrofit.RouteModifiers
 import com.pioneers.jobgig.dataobj.retrofit.RouteReq
 import com.pioneers.jobgig.dataobj.retrofit.Routes
 import com.pioneers.jobgig.dataobj.utils.AvailableWorker
+import com.pioneers.jobgig.dataobj.utils.LatLngs
 import com.pioneers.jobgig.dataobj.utils.User
 import com.pioneers.jobgig.screens.AlertWorkerState
 import com.pioneers.jobgig.screens.ClientType
@@ -65,7 +66,7 @@ class VocConnectViewModel:ViewModel() {
     private var availableworkerQuery = _availableworkerQuery
     var thatUser: User = User()
     private var _thoseUser = MutableStateFlow(mutableStateListOf<DocumentSnapshot>())
-    var availableWorker = MutableStateFlow(mutableStateListOf<AvailableWorker>())
+    var availableWorker = mutableStateListOf<AvailableWorker>()
 
     private var thoseUser = derivedStateOf {
         _thoseUser.value.mapNotNull { doc ->
@@ -74,18 +75,18 @@ class VocConnectViewModel:ViewModel() {
     }
     private val nots =derivedStateOf{
         thoseUser.value.forEachIndexed { index, user ->
-            if (user.currentLocation.latitude != 0.0 && user.currentLocation.longitude != 0.0 && index >= availableWorker.value.size){
+            if (user.currentLocation.latitude != 0.0 && user.currentLocation.longitude != 0.0 && index >= availableWorker.size){
                 viewModelScope.launch {
                     val route =
                         getRoute(thisUser.currentLocation, user.currentLocation) ?: return@launch
-                    availableWorker.value.add(AvailableWorker(user.profilePic,user.fullname,user.rating,route.distanceMeters,route.duration, pos = index))
+                    availableWorker.add(AvailableWorker(user.profilePic,user.fullname,user.rating,route.distanceMeters,route.duration, pos = index))
                 }
             }
         }
     }
     var thoseUserLatLng = derivedStateOf {
         _thoseUser.value.mapNotNull { doc ->
-            doc.toObject<User>()?.currentLocation
+            doc.toObject<User>()?.currentLocation?.let { LatLng(it.latitude,it.longitude) }
         }
     }
         private set
@@ -156,7 +157,7 @@ class VocConnectViewModel:ViewModel() {
         }
     }
 
-    private fun getRoute(currentUser: LatLng, otherUser: LatLng): Routes? {
+    private fun getRoute(currentUser:LatLngs, otherUser: LatLngs): Routes? {
         var route: Routes? = null
         val routeReq: RouteReq = retrofit.create(RouteReq::class.java)
         val request = Request(

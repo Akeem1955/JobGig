@@ -24,11 +24,11 @@ class ProfileViewmodel:ViewModel() {
     var errorState by mutableStateOf(false)
     var errorMsg by mutableStateOf("")
     private val storage = Firebase.storage.getReference("UserProfile").child(OnBoardViewModel.currentUser.uid)
-    private val db = Firebase.firestore.collection("Users").document(Firebase.auth.currentUser?.uid?:OnBoardViewModel.currentUser.uid)
+    private val db = Firebase.firestore.collection("Users")
     var name by mutableStateOf(OnBoardViewModel.currentUser.fullname)
     var about by mutableStateOf(OnBoardViewModel.currentUser.description)
     var address by mutableStateOf(OnBoardViewModel.currentUser.address)
-    var profileUri by mutableStateOf("")
+    var profileUri by mutableStateOf(OnBoardViewModel.currentUser.profilePic)
     private var stream:InputStream? = null
 
 
@@ -52,8 +52,8 @@ class ProfileViewmodel:ViewModel() {
                 if(address != OnBoardViewModel.currentUser.address){
                     OnBoardViewModel.currentUser.address = address
                 }
-                db.set(OnBoardViewModel.currentUser).await()
-                OnBoardViewModel.currentUser = db.get().await().toObject<User>()?:OnBoardViewModel.currentUser
+                db.document(Firebase.auth.currentUser?.uid?:OnBoardViewModel.currentUser.uid).set(OnBoardViewModel.currentUser).await()
+                OnBoardViewModel.currentUser = db.document(Firebase.auth.currentUser?.uid?:OnBoardViewModel.currentUser.uid).get().await().toObject<User>()?:OnBoardViewModel.currentUser
                 loadingState = false
             }catch (e:FileNotFoundException){
                 e.printStackTrace()

@@ -29,6 +29,7 @@ import androidx.compose.material.icons.rounded.AddAPhoto
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Celebration
 import androidx.compose.material.icons.rounded.Chat
+import androidx.compose.material.icons.rounded.EditLocationAlt
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Phone
@@ -72,6 +73,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.pioneers.jobgig.R
 import com.pioneers.jobgig.ui.theme.JobGigTheme
 import com.pioneers.jobgig.viewmodels.OnBoardViewModel
@@ -352,7 +355,7 @@ enum class Agreement{
 
 
 @Composable
-fun ProfileSetting(viewmodel: ProfileViewmodel){
+fun ProfileSetting(viewmodel: ProfileViewmodel,navController: NavController){
     var type by rememberSaveable {
         mutableIntStateOf(0)
     }
@@ -387,7 +390,7 @@ fun ProfileSetting(viewmodel: ProfileViewmodel){
            Row (verticalAlignment = Alignment.CenterVertically,modifier = Modifier
                .fillMaxWidth()
                .statusBarsPadding()){
-               IconButton(onClick = { /*TODO*/ }) {
+               IconButton(onClick = { if (navController.canGoBack)navController.popBackStack()}) {
                    Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "")
                }
                Text(text = "Profile", fontSize = MaterialTheme.typography.titleLarge.fontSize)
@@ -403,7 +406,13 @@ fun ProfileSetting(viewmodel: ProfileViewmodel){
                Box(modifier = Modifier){
                    AsyncImage(modifier = Modifier
                        .size(150.dp)
-                       .clip(CircleShape) ,contentScale = ContentScale.Crop,model = ImageRequest.Builder(LocalContext.current).data(OnBoardViewModel.currentUser.profilePic).error(R.drawable.round_image_24).build(), contentDescription ="" )
+                       .clip(CircleShape),
+                       contentScale = ContentScale.Crop,
+                       model = ImageRequest.Builder(LocalContext.current)
+                           .data(viewmodel.profileUri)
+                           .error(R.drawable.round_account_circle_24)
+                           .build(),
+                       contentDescription ="" )
                    IconButton(modifier = Modifier
                        .align(Alignment.BottomEnd)
                        .clip(CircleShape)
@@ -430,7 +439,7 @@ fun ProfileSetting(viewmodel: ProfileViewmodel){
                    Icon(imageVector = Icons.Outlined.Info, contentDescription ="" )
                    Column(modifier = Modifier.weight(1f,true)) {
                        Text(text = "About", fontSize = MaterialTheme.typography.labelSmall.fontSize)
-                       Text(text = viewmodel.name, fontSize = MaterialTheme.typography.labelMedium.fontSize)
+                       Text(text = viewmodel.about, fontSize = MaterialTheme.typography.labelMedium.fontSize)
                    }
 
                }
@@ -441,14 +450,14 @@ fun ProfileSetting(viewmodel: ProfileViewmodel){
                    Icon(imageVector =Icons.Rounded.Phone , contentDescription ="" )
                    Column(modifier = Modifier.weight(1f,true)) {
                        Text(text = "Phone", fontSize = MaterialTheme.typography.labelSmall.fontSize)
-                       Text(text = OnBoardViewModel.currentUser.phone, fontSize = MaterialTheme.typography.labelMedium.fontSize)
+                       Text(text = Firebase.auth.currentUser?.phoneNumber?:"", fontSize = MaterialTheme.typography.labelMedium.fontSize)
                    }
                }
                Divider()
                Row(verticalAlignment = Alignment.CenterVertically,
                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                    modifier = Modifier.fillMaxWidth().clickable {label ="Address";type=2;openState.value=true}) {
-                   Icon(imageVector =Icons.Rounded.Phone , contentDescription ="" )
+                   Icon(imageVector =Icons.Rounded.EditLocationAlt , contentDescription ="" )
                    Column(modifier = Modifier.weight(1f,true)) {
                        Text(text = "Address", fontSize = MaterialTheme.typography.labelSmall.fontSize)
                        Text(text = viewmodel.address, fontSize = MaterialTheme.typography.labelMedium.fontSize)
