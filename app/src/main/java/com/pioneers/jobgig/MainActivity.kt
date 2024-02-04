@@ -1,14 +1,12 @@
 package com.pioneers.jobgig
 
 
-import android.content.Intent
+import android.app.Dialog
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -21,40 +19,21 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.app.NotificationManagerCompat
-
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.navigation.NavController
-import androidx.navigation.NavGraph
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavType
-import androidx.navigation.Navigator
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import androidx.navigation.navDeepLink
-import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
-import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.toObject
 import com.pioneers.jobgig.dataobj.utils.User
-import com.pioneers.jobgig.screens.CallScreenManager
-import com.pioneers.jobgig.screens.HomeScreen
-import com.pioneers.jobgig.screens.ProfileSetting
 import com.pioneers.jobgig.screens.ScreenNav
 import com.pioneers.jobgig.screens.ScreenRoute
-import com.pioneers.jobgig.screens.Simulator
 import com.pioneers.jobgig.ui.theme.JobGigTheme
 import com.pioneers.jobgig.viewmodels.OnBoardViewModel
 import kotlinx.coroutines.tasks.await
@@ -92,7 +71,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             JobGigTheme {
                 var loadingState by rememberSaveable {
-                    mutableStateOf(false)
+                    mutableStateOf(true)
                 }
                 var retry by rememberSaveable {
                     mutableIntStateOf(0)
@@ -115,30 +94,30 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-                if (user == null || !user.isEmailVerified){
-                    keep=false
-                    ScreenNav(navHostController = rememberNavController(), start =ScreenRoute.GetStarted.route )
-                }
-                else if(user.isEmailVerified){
-                    LaunchedEffect(key1 = retry){
-                       try {
-                           loadingState=true
-                           OnBoardViewModel.currentUser =
-                               Firebase.firestore.collection("Users").document(user.uid).get().await().toObject<User>()!!
-                           loadingState =false
-                       }catch (e:Exception){
-                           loadingState=false
-                           errorState = true
-                           errorMsg = "ouch!!! unexpected error check your connection and  retry"
-                           e.printStackTrace()
-                           println(e.message)
-                       }
-                    }
-                    if (!loadingState && !errorState){
-                        keep=false
-                        ScreenNav(navHostController = rememberNavController(), start =ScreenRoute.HomeEntry.route )
-                    }
-                }
+//                if (user == null || !user.isEmailVerified){
+//                    keep=false
+//                    ScreenNav(navHostController = rememberNavController(), start =ScreenRoute.GetStarted.route )
+//                }
+//                else if(user.isEmailVerified){
+//                    LaunchedEffect(key1 = retry){
+//                       try {
+//                           loadingState=true
+//                           OnBoardViewModel.currentUser =
+//                               Firebase.firestore.collection("Users").document(user.uid).get().await().toObject<User>()!!
+//                           loadingState =false
+//                       }catch (e:Exception){
+//                           loadingState=false
+//                           errorState = true
+//                           errorMsg = "ouch!!! unexpected error check your connection and  retry"
+//                           e.printStackTrace()
+//                           println(e.message)
+//                       }
+//                    }
+//                    if (!loadingState && !errorState){
+//                        keep=false
+//                        ScreenNav(navHostController = rememberNavController(), start =ScreenRoute.HomeEntry.route )
+//                    }
+//                }
 //                NavHost(navController = rememberNavController(), startDestination = "alert"){
 //                    composable("alert"){
 //                        Simulator()
