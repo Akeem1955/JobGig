@@ -18,9 +18,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.Button
@@ -218,7 +218,7 @@ fun Login(modifier: Modifier, viewModel: OnBoardViewModel, navController: NavCon
 @Composable
 fun LoginScreen(viewModel: OnBoardViewModel, navController: NavController?){
     Scaffold {
-        Box(modifier = Modifier.background(color = colorResource(id = R.color.white))) {
+        Box(modifier = Modifier.background(color = MaterialTheme.colorScheme.background)) {
             Box(modifier = Modifier
                 .background(color = colorResource(id = R.color.btn))
                 .fillMaxWidth()
@@ -286,6 +286,8 @@ fun Signup(modifier: Modifier, viewModel: OnBoardViewModel,  navController: NavC
                 TextField(modifier = Modifier.padding(horizontal = 16.dp) ,value = viewModel._fullname,
                     onValueChange = {update->viewModel.updateFullname(update)},
                     leadingIcon = { Icon(imageVector = Icons.Rounded.Person, contentDescription = "") },
+                    isError = viewModel._isErrorN,
+                    supportingText = { Text(text = viewModel._errorName) },
                     label = { Text(text = "FullName") },
                     placeholder = { Text(text = "FullName...") })
                 TextField(modifier = Modifier.padding(horizontal = 16.dp) ,value = viewModel._email,
@@ -332,7 +334,11 @@ fun SignUpScreen(viewModel: OnBoardViewModel, navController: NavController?){
                 .fillMaxSize()
                 .padding(top = it.calculateTopPadding() + 50.dp))
             IconButton(modifier = Modifier.padding(top = it.calculateTopPadding()) ,onClick = { if (navController?.canGoBack == true)navController.popBackStack()}) {
-                Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "", tint = Color.White)
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                    contentDescription = "",
+                    tint = Color.White
+                )
             }
 
         }
@@ -443,7 +449,11 @@ fun ResetPasswordScreen(viewModel: OnBoardViewModel, navController: NavControlle
                 .fillMaxSize()
                 .padding(top = it.calculateTopPadding() + 50.dp))
             IconButton(modifier = Modifier.padding(top = it.calculateTopPadding()) ,onClick = { if(btnback.value)navController?.popBackStack();btnback.value=false}) {
-                Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "", tint = Color.White)
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                    contentDescription = "",
+                    tint = Color.White
+                )
             }
         }
     }

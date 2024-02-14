@@ -26,7 +26,7 @@ data class Request(
     val languageCode: String,
     val units: String
 )
-data class Polyline(var encodedPolyline: String)
-data class Routes(var distanceMeters:String, var duration:String , var polyline:Polyline)
+data class Polyline(var encodedPolyline: String = "")
+data class Routes(var distanceMeters:String?="0 meter", var duration:String? = "0s", var polyline:Polyline?)
 data class RouteRes(var routes:ArrayList<Routes>)
 

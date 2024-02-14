@@ -2,13 +2,16 @@ package com.pioneers.jobgig.viewmodels
 
 import android.content.Context
 import android.net.Uri
+import androidx.compose.runtime.SnapshotMutationPolicy
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.toObject
@@ -17,6 +20,7 @@ import com.pioneers.jobgig.dataobj.utils.CourseContent
 import com.pioneers.jobgig.dataobj.utils.CourseData
 import com.pioneers.jobgig.dataobj.utils.InstructorDesignData
 import com.pioneers.jobgig.dataobj.utils.User
+import com.pioneers.jobgig.screens.ScreenRoute
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
@@ -40,7 +44,7 @@ class TutCreate:ViewModel() {
     private val storageNail =Firebase.storage.reference.child("CourseImage")
     private val users = Firebase.firestore.collection("Users")
 
-    fun createTut(ctx:Context){
+    fun createTut(ctx:Context,navController: NavController){
         loadingState = true
         viewModelScope.launch {
             if (thumburi.value.isBlank()){
@@ -84,13 +88,15 @@ class TutCreate:ViewModel() {
                 tut.content = tutVideo.awaitAll()
                 tut.forWho = who
                 tut.whatLearn=aim
+                tut.keyword = generateKeywords(tutName.value)
                 tut.title =tutName.value
-                tut.instructorInfo = listOf(InstructorDesignData(name = OnBoardViewModel.currentUser.fullname, uri =OnBoardViewModel.currentUser.profilePic , description = about.value))
-                OnBoardViewModel.currentUser.tutCreated = true
-                OnBoardViewModel.currentUser.tutList = db.add(tut).await().id
-                users.document(OnBoardViewModel.currentUser.uid).set(OnBoardViewModel.currentUser).await()
-                OnBoardViewModel.currentUser = users.document(OnBoardViewModel.currentUser.uid).get().await().toObject<User>()?:OnBoardViewModel.currentUser
+                tut.instructorInfo = listOf(InstructorDesignData(name = OnBoardViewModel.currentUser.value.fullname, uri =OnBoardViewModel.currentUser.value.profilePic , description = about.value))
+                OnBoardViewModel.currentUser.value.tutCreated = true
+                OnBoardViewModel.currentUser.value.tutList = db.add(tut).await().id
+                users.document(OnBoardViewModel.currentUser.value.uid).set(OnBoardViewModel.currentUser.value).await()
+                OnBoardViewModel.currentUser.value = users.document(OnBoardViewModel.currentUser.value.uid).get().await().toObject<User>()?:OnBoardViewModel.currentUser.value
                 loadingState = false
+                navController.popBackStack()
             }catch (e:Exception){
                 loadingState= false
                 errorMsg="Ouch!!! unexpected error check your connection and retry"
@@ -107,10 +113,11 @@ class TutCreate:ViewModel() {
     //tut upload
     val query = db.limit(20).orderBy("learners")
     private var snapshots = mutableStateOf(CourseData())
-    private val myTutorial = derivedStateOf {
-        snapshots.value.content
-    }
-    var tutorial = mutableStateOf(myTutorial.value)
+
+    var tutorial = snapshots.value.content.toMutableStateList().filter {
+        it.title.contains("")
+    }.toMutableStateList()
+
     var newTutUri = mutableStateOf("")
     var newTutTitle = mutableStateOf("")
 
@@ -118,7 +125,17 @@ class TutCreate:ViewModel() {
         viewModelScope.launch {
             try {
                 loadingState=true
-                snapshots.value =  db.document(OnBoardViewModel.currentUser.tutList).get().await().toObject<CourseData>()?:snapshots.value
+                println("level 1")
+                snapshots.value =  db.document(OnBoardViewModel.currentUser.value.tutList).get().await().toObject<CourseData>()!!
+                println("level 2")
+                println("level 3")
+                println(snapshots.value.content)
+                println("level 4")
+                tutorial.clear()
+                tutorial.addAll(snapshots.value.content.toMutableStateList().filter {
+                    it.title.contains("")
+                }.toMutableStateList())
+                println(tutorial)
                 loadingState=false
             }catch (e:Exception){
                 loadingState=false
@@ -131,12 +148,12 @@ class TutCreate:ViewModel() {
     }
 
     fun upload(ctx:Context){
-        if (newTutUri.value.isNotBlank()){
+        if (newTutUri.value.isBlank()){
             errorState=true
             errorMsg="You have not pick a file for the tutorial video"
             return
         }
-        if (newTutTitle.value.isNotBlank()){
+        if (newTutTitle.value.isBlank()){
             errorState=true
             errorMsg="tutorial title is required..."
             return
@@ -149,6 +166,7 @@ class TutCreate:ViewModel() {
             return
         }
         viewModelScope.launch {
+            loadingState = true
            try {
                val newtut = CourseContent(newTutTitle.value,ctx.contentResolver.openInputStream(Uri.parse(newTutUri.value))
                    ?.let { it1 -> storage.child(UUID.randomUUID().toString()).putStream(it1).await().storage.downloadUrl.await().toString()
@@ -160,9 +178,13 @@ class TutCreate:ViewModel() {
                    return@launch
                }
                snapshots.value.content = snapshots.value.content.toMutableList().also { it.add(newtut) }
-               db.document(OnBoardViewModel.currentUser.tutList).set(snapshots).await()
+               db.document(OnBoardViewModel.currentUser.value.tutList).set(snapshots.value).await()
+               getTutorial()
                loadingState = false
            }catch (e:Exception){
+               loadingState=false
+               errorState=true
+               errorMsg="Ouch!!! we encounter an unexpected error check your connection and retry"
                e.printStackTrace()
                println(e.message)
            }
@@ -170,9 +192,41 @@ class TutCreate:ViewModel() {
     }
 
     fun filter(query:String){
-        tutorial.value = myTutorial.value.filter {
+        println(snapshots.value.content)
+        tutorial.clear()
+        tutorial.addAll(snapshots.value.content.toMutableStateList().filter {
             it.title.contains(query)
+        }.toMutableStateList())
+    }
+
+    fun delete(index:Int){
+        viewModelScope.launch{
+            try {
+                loadingState=true
+                snapshots.value.content = snapshots.value.content.toMutableList().also {it.removeAt(index)}
+                db.document(OnBoardViewModel.currentUser.value.tutList).set(snapshots.value).await()
+                getTutorial()
+                loadingState=false
+            }catch (e:Exception){
+                loadingState=false
+                e.printStackTrace()
+                println(e.message)
+                errorMsg ="Unable to delete tutorial.."
+                errorState =true
+            }
         }
+    }
+
+    fun generateKeywords(title:String): List<String> {
+        val keyword = mutableListOf<String>()
+        for (i in title.indices){
+            var temp = ""
+            for (j in i until title.length){
+                temp += title[j]
+                keyword.add(temp)
+            }
+        }
+        return keyword
     }
 
 

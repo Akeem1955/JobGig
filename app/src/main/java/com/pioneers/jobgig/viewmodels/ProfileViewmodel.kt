@@ -13,6 +13,7 @@ import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.toObject
 import com.google.firebase.storage.storage
 import com.pioneers.jobgig.dataobj.utils.User
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -23,53 +24,60 @@ class ProfileViewmodel:ViewModel() {
     var loadingState by mutableStateOf(false)
     var errorState by mutableStateOf(false)
     var errorMsg by mutableStateOf("")
-    private val storage = Firebase.storage.getReference("UserProfile").child(OnBoardViewModel.currentUser.uid)
+    private val storage = Firebase.storage.reference.child("UserProfile").child(Firebase.auth.currentUser?.uid?:OnBoardViewModel.currentUser.value.uid)
     private val db = Firebase.firestore.collection("Users")
-    var name by mutableStateOf(OnBoardViewModel.currentUser.fullname)
-    var about by mutableStateOf(OnBoardViewModel.currentUser.description)
-    var address by mutableStateOf(OnBoardViewModel.currentUser.address)
-    var profileUri by mutableStateOf(OnBoardViewModel.currentUser.profilePic)
+    var name by mutableStateOf(OnBoardViewModel.currentUser.value .fullname)
+    var about by mutableStateOf(OnBoardViewModel.currentUser.value .description)
+    var address by mutableStateOf(OnBoardViewModel.currentUser.value .address)
+    var profileUri by mutableStateOf("")
+    var tempuri by mutableStateOf(OnBoardViewModel.currentUser.value .profilePic)
     private var stream:InputStream? = null
 
 
+
     fun saveProfile(ctx:Context){
-        viewModelScope.launch {
-            try {
-               if(profileUri.isNotBlank()){
-                   stream = ctx.contentResolver.openInputStream(Uri.parse(profileUri))
-                   if (stream == null)return@launch
-                   val result = async { storage.putStream(stream!!).await() }
-                   val profile = async { storage.downloadUrl.await()}
-                   result.await()
-                   OnBoardViewModel.currentUser.profilePic = profile.await().toString()
+       try {
+           viewModelScope.launch {
+               try {
+                   loadingState = true
+                   println("level 1")
+                   if(profileUri.isNotBlank()){
+                       stream = ctx.contentResolver.openInputStream(Uri.parse(profileUri))
+                       if (stream == null)return@launch
+                       println("level 2")
+                       storage.putStream(stream!!).await()
+                       println("level 3")
+
+                       println("level 4")
+                       OnBoardViewModel.currentUser.value.profilePic = storage.downloadUrl.await().toString()
+                   }
+                   if(name != OnBoardViewModel.currentUser.value.fullname){
+                       OnBoardViewModel.currentUser.value.description = about
+                   }
+                   if(about != OnBoardViewModel.currentUser.value.description){
+                       OnBoardViewModel.currentUser.value.description = about
+                   }
+                   if(address != OnBoardViewModel.currentUser.value.address){
+                       OnBoardViewModel.currentUser.value.address = address
+                   }
+                   println("level 5")
+                   db.document(Firebase.auth.currentUser?.uid?:OnBoardViewModel.currentUser.value.uid).set(OnBoardViewModel.currentUser.value).await()
+                   println("level 6")
+                   OnBoardViewModel.currentUser.value = db.document(Firebase.auth.currentUser?.uid?:OnBoardViewModel.currentUser.value.uid).get().await().toObject<User>()?:OnBoardViewModel.currentUser.value
+                   println("level 7")
+                   loadingState = false
+               } catch (e:Exception){
+                   e.printStackTrace()
+                   println(e.message)
+                   loadingState = false
+                   errorState  = true
+                   errorMsg ="ouch!!! unexpected error happen check your internet connection and try again please"
                }
-               if(name != OnBoardViewModel.currentUser.fullname){
-                   OnBoardViewModel.currentUser.description = about
-               }
-                if(about != OnBoardViewModel.currentUser.description){
-                    OnBoardViewModel.currentUser.description = about
-                }
-                if(address != OnBoardViewModel.currentUser.address){
-                    OnBoardViewModel.currentUser.address = address
-                }
-                db.document(Firebase.auth.currentUser?.uid?:OnBoardViewModel.currentUser.uid).set(OnBoardViewModel.currentUser).await()
-                OnBoardViewModel.currentUser = db.document(Firebase.auth.currentUser?.uid?:OnBoardViewModel.currentUser.uid).get().await().toObject<User>()?:OnBoardViewModel.currentUser
-                loadingState = false
-            }catch (e:FileNotFoundException){
-                e.printStackTrace()
-                println(e.message)
-                loadingState= false
-                errorState = true
-                errorMsg = "File not found try picking another one"
-            }
-            catch (e:Exception){
-                e.printStackTrace()
-                println(e.message)
-                loadingState = false
-                errorState  = true
-                errorMsg ="ouch!!! unexpected error happen check your internet connection and try again please"
-            }
-        }
+           }
+       }catch (e:Exception){
+           e.printStackTrace()
+           println(e.message)
+       }
 
     }
 

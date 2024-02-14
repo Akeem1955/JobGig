@@ -1,5 +1,6 @@
 package com.pioneers.jobgig.screens
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
@@ -16,6 +17,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
 import com.pioneers.jobgig.viewmodels.CourseViewModel
 import com.pioneers.jobgig.viewmodels.DashboardViewmodel
@@ -145,6 +147,19 @@ fun ScreenNav(navHostController: NavHostController,start:String){
                 val viewmodel = it.sharedViewModel<VocConnectViewModel>(navController = navHostController)
                 ServiceVocOnline(viewmodel = viewmodel, navController =navHostController )
             }
+            composable(deepLinks = listOf(navDeepLink {
+                    uriPattern = "jobgig://confirm-gig/{data}"
+                    action = Intent.ACTION_VIEW
+                }),
+                arguments = listOf(navArgument(name = "data"){
+                        type = NavType.StringType
+                        defaultValue = ""
+                    }),
+                route = ScreenRoute.GigAlert.route){entry->
+                val data = (entry.arguments?.getString("data")?:"").replace("_","/")
+                val viewmodel = entry.sharedViewModel<VocConnectViewModel>(navController = navHostController)
+                GigAlert(viewModel = viewmodel, navController =navHostController , path =data)
+            }
         }
         composable(route = ScreenRoute.ProfileEdit.route){
             val viewmodel:ProfileViewmodel = viewModel()
@@ -181,6 +196,9 @@ fun ScreenNav(navHostController: NavHostController,start:String){
         }
         composable(route = ScreenRoute.HomeEntry.route){
             HomeContainer(navHostController)
+        }
+        composable(route = ScreenRoute.Notification.route){
+            Notifications(navController = navHostController)
         }
     }
 }

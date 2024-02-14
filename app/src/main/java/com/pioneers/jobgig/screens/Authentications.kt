@@ -7,7 +7,6 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,8 +35,8 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowForwardIos
 import androidx.compose.material.icons.rounded.AccessTime
-import androidx.compose.material.icons.rounded.ArrowForwardIos
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Circle
 import androidx.compose.material.icons.rounded.StarHalf
@@ -66,7 +65,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -78,6 +76,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.media3.common.MediaItem
@@ -98,8 +97,6 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
@@ -114,7 +111,6 @@ import com.pioneers.jobgig.sealed.CourseContentDesign
 import com.pioneers.jobgig.sealed.CourseInfoDesign
 import com.pioneers.jobgig.ui.theme.JobGigTheme
 import com.pioneers.jobgig.viewmodels.CourseViewModel
-import com.pioneers.jobgig.viewmodels.MapViewModel
 import com.pioneers.jobgig.viewmodels.VideoPlayViewModel
 import com.pioneers.jobgig.viewmodels.VocConnectViewModel
 import kotlinx.coroutines.delay
@@ -129,7 +125,7 @@ fun CourseInfo(
     navController: NavController,
     contentType:CourseContentDesign){
     Column {
-        Text(text =title,Modifier.padding(start = 12.dp, bottom = 10.dp, end = 8.dp))
+        Text(text =title,Modifier.padding(start = 12.dp, bottom = 10.dp, end = 8.dp), fontSize = MaterialTheme.typography.bodyLarge.fontSize, fontWeight = FontWeight.Bold)
         when(contentType){
             CourseContentDesign.Items ->{
                 val contentItem = content as CourseContentDesign.ListDesign
@@ -241,9 +237,7 @@ fun CourseInfo(
                             }
                         }
                     }
-                    CourseInfoDesign.InstructorDesign -> {
-                        Unit
-                    }
+                    else -> {}
                 }
             }
             CourseContentDesign.Single ->{
@@ -294,7 +288,7 @@ fun InstructorDesign(uri:String, name: String, description:String,navController:
         }
         println(uri +"  original")
         IconButton(onClick = {navController.navigate(route = ScreenRoute.InstructorDetailLScreenRoute.addUri(uri.replace("/",","),description))}) {
-            Icon(imageVector = Icons.Rounded.ArrowForwardIos, contentDescription = "")
+            Icon(imageVector = Icons.AutoMirrored.Rounded.ArrowForwardIos, contentDescription = "")
         }
     }
 
@@ -487,7 +481,6 @@ fun  CourseIntroRate(title: String, duration: String, ratings: Double, studentEn
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(text = title, modifier = Modifier.weight(1f, fill = true), fontSize = MaterialTheme.typography.titleLarge.fontSize)
-            Duration(duration = duration)
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)){
             Text(text = ratings.toString(), fontSize = MaterialTheme.typography.labelSmall.fontSize, fontWeight = FontWeight.Bold)
@@ -516,7 +509,6 @@ fun CourseVideoItem(content:CourseContent, pos:Int, viewModel: CourseViewModel){
         Text(text = "$pos")
         Column(verticalArrangement = Arrangement.spacedBy(4.dp),modifier = Modifier.weight(1f)) {
             Text(overflow = TextOverflow.Ellipsis ,maxLines = 1 ,text = content.title)
-            Text(overflow = TextOverflow.Ellipsis ,maxLines = 1 ,text = content.duration, fontSize = MaterialTheme.typography.labelSmall.fontSize)
         }
     }
 }
@@ -617,6 +609,7 @@ fun DisplayRationale(permisionState:PermissionState, rationale: String){
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MapView(modifier: Modifier,locationServices:FusedLocationProviderClient?, viewModel:VocConnectViewModel?, polyline:List<LatLng>?, workers:List<LatLng>?){
+   val ctx = LocalContext.current
     Box(modifier = modifier) {
         val uiSettings by remember {
             mutableStateOf(MapUiSettings(mapToolbarEnabled = true, compassEnabled = true, myLocationButtonEnabled = true, zoomControlsEnabled = true)) }
@@ -627,7 +620,7 @@ fun MapView(modifier: Modifier,locationServices:FusedLocationProviderClient?, vi
         val owner = LocalLifecycleOwner.current
         val cameraPositionState = rememberCameraPositionState {
             if (viewModel != null) {
-                position = CameraPosition.fromLatLngZoom(viewModel.locState, 18f)
+                position = CameraPosition.fromLatLngZoom(viewModel.locState, 15f)
             }
         }
         DisposableEffect(key1 = owner){
@@ -650,27 +643,28 @@ fun MapView(modifier: Modifier,locationServices:FusedLocationProviderClient?, vi
                 viewModel.updateLatLng(realLocation.latitude, realLocation.longitude)
 
                 cameraPositionState.animate(CameraUpdateFactory.newLatLng(viewModel.locState),1000)
+                while (true){
+                    println("About to Sleep........")
+                    delay(30000)
+                    try {
+                        if (permissions.allPermissionsGranted){
+                            println("Worked As expected")
+                            val currentLocation = locationServices.lastLocation.await()
+                            println("Worked As expected....")
+                            viewModel.updateLatLng(currentLocation.latitude, currentLocation.longitude)
+                            cameraPositionState.animate(CameraUpdateFactory.newLatLng(viewModel.locState),1000)
+                            println("Worked As expected.... finish")
+                        }
+                        else{
+                            println("all permission not granted")
+                        }
+                    }catch (e:Exception){
+                        println("Error happened ${e.printStackTrace()}")
+                        throw e
+                    }
+                }
             }catch (e:Exception){
                 println("Error happened ${e.printStackTrace()}")
-            }
-            while (true){
-                println("About to Sleep........")
-                delay(5000)
-                try {
-                    if (permissions.allPermissionsGranted && viewModel !=null && locationServices != null){
-                        println("Worked As expected")
-                        val currentLocation = locationServices.lastLocation.await()
-                        println("Worked As expected....")
-                        viewModel.updateLatLng(currentLocation.latitude, currentLocation.longitude)
-                        cameraPositionState.animate(CameraUpdateFactory.newLatLng(viewModel.locState),1000)
-                        println("Worked As expected.... finish")
-                    }
-                    else{
-                        println("all permission not granted")
-                    }
-                }catch (e:Exception){
-                    println("Error happened ${e.printStackTrace()}")
-                }
             }
         }
 
@@ -680,15 +674,23 @@ fun MapView(modifier: Modifier,locationServices:FusedLocationProviderClient?, vi
                 properties = properties,
                 uiSettings = uiSettings,
                 cameraPositionState = cameraPositionState){
-                if (polyline != null){
+                if (!polyline.isNullOrEmpty()){
                     Polyline(points = polyline, color = Color.Magenta, width = 2f)
-                    Marker(icon = BitmapDescriptorFactory.fromResource(R.drawable.noto_hammer_and_wrench), state = MarkerState(position = polyline[0]))
-                    Marker(icon = BitmapDescriptorFactory.fromResource(R.drawable.mingcute_location_2_fill), state = MarkerState(position = polyline[polyline.lastIndex]))
-                }
-                if (workers != null){
-                    val sam = workers.map {
-                        Marker(icon = BitmapDescriptorFactory.fromResource(R.drawable.noto_hammer_and_wrench), state = MarkerState(position = it))
+                    val start =
+                        ctx.getDrawable(R.drawable.arcticons_nrf_toolbox)?.toBitmap()
+                    val destination =
+                        ctx.getDrawable(R.drawable.mingcute_location_2_fill)?.toBitmap()
+                    if (start != null){
+                        Marker(icon = BitmapDescriptorFactory.fromBitmap(start), state = MarkerState(position = polyline[0]))
                     }
+                    if (destination!=null){
+                        Marker(icon = BitmapDescriptorFactory.fromBitmap(destination), state = MarkerState(position = polyline[polyline.lastIndex]))
+                    }
+                }
+                workers?.map {
+                    val image =
+                        ctx.getDrawable(R.drawable.arcticons_nrf_toolbox)?.toBitmap() ?: return@map
+                    Marker(icon = BitmapDescriptorFactory.fromBitmap(image), state = MarkerState(position = it))
                 }
                 //Circle(center =viewModel.locState , radius = 50.0, fillColor = Color.Magenta, strokeColor = Color.Magenta, strokeWidth = 1f)
             }
@@ -753,7 +755,7 @@ fun WorkerCards(onClick:()->Unit, modifier: Modifier = Modifier, profilePic: Str
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant,
         modifier = modifier
-            .clickable {  }
+            .clickable {onClick.invoke()}
             .height(80.dp)
             .fillMaxWidth()
             .padding(horizontal = 12.dp),
@@ -854,7 +856,6 @@ fun MyPastWorkGallery(pastWork:List<String>,modifier: Modifier){
 
 
 
-@OptIn(ExperimentalPermissionsApi::class)
 @Preview(showBackground = true)
 @Composable
 fun LoginPreview(){

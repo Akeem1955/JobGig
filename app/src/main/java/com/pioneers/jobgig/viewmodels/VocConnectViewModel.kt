@@ -8,11 +8,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.Firebase
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.toObject
 import com.google.maps.android.PolyUtil
@@ -29,8 +32,11 @@ import com.pioneers.jobgig.dataobj.utils.LatLngs
 import com.pioneers.jobgig.dataobj.utils.User
 import com.pioneers.jobgig.screens.AlertWorkerState
 import com.pioneers.jobgig.screens.ClientType
+import com.pioneers.jobgig.screens.ScreenRoute
 import com.pioneers.jobgig.screens.VocationalCategory
 import com.pioneers.jobgig.viewmodels.OnBoardViewModel.Companion.currentUser
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,26 +44,33 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import java.util.UUID
+import kotlin.time.Duration.Companion.seconds
 
 class VocConnectViewModel:ViewModel() {
     val uuid = UUID.randomUUID().toString()
+    val updates = Firebase.firestore
 
     //needed variables
 
 
     var loadingState by mutableStateOf(true)
+    var errorState by mutableStateOf(false)
+    var errorMsg by mutableStateOf("")
     var polyline by mutableStateOf(emptyList<LatLng>())
-    var clientType by mutableStateOf(ClientType.Worker)
-    var yourType = derivedStateOf {
-        when(clientType){
+    var yourType by mutableStateOf(ClientType.Client)
+    var clientType = derivedStateOf {
+        when(yourType){
             ClientType.Client -> ClientType.Worker
             ClientType.Worker -> ClientType.Client
         }
     }
-    var thisUser: User = currentUser
+    var thisUser: User = currentUser.value
     var transactSession by mutableStateOf(QuickSession(fullname = thisUser.fullname, profilePic = thisUser.profilePic))
-        private set
     private val retrofit: Retrofit = Retrofit.Builder()
         .baseUrl("https://routes.googleapis.com/")
         .addConverterFactory(GsonConverterFactory.create()).build()
@@ -68,22 +81,19 @@ class VocConnectViewModel:ViewModel() {
     private var _thoseUser = MutableStateFlow(mutableStateListOf<DocumentSnapshot>())
     var availableWorker = mutableStateListOf<AvailableWorker>()
 
-    private var thoseUser = derivedStateOf {
-        _thoseUser.value.mapNotNull { doc ->
-            doc.toObject<User>()
-        }
-    }
-    private val nots =derivedStateOf{
-        thoseUser.value.forEachIndexed { index, user ->
-            if (user.currentLocation.latitude != 0.0 && user.currentLocation.longitude != 0.0 && index >= availableWorker.size){
-                viewModelScope.launch {
-                    val route =
-                        getRoute(thisUser.currentLocation, user.currentLocation) ?: return@launch
-                    availableWorker.add(AvailableWorker(user.profilePic,user.fullname,user.rating,route.distanceMeters,route.duration, pos = index))
-                }
-            }
-        }
-    }
+    private var thoseUser = mutableStateListOf<User>()
+//    private val nots =derivedStateOf{
+//        thoseUser.forEachIndexed { index, user ->
+//            println("we are here")
+//            if (user.currentLocation.latitude != 0.0 && user.currentLocation.longitude != 0.0 && index >= availableWorker.size){
+//                viewModelScope.launch {
+//                    val route =
+//                        getRoute(thisUser.currentLocation, user.currentLocation) ?: return@launch
+//                    availableWorker.add(AvailableWorker(user.profilePic,user.fullname,user.rating,route.distanceMeters?:"0 meter",route.duration?:"0 sec", pos = index))
+//                }
+//            }
+//        }
+//    }
     var thoseUserLatLng = derivedStateOf {
         _thoseUser.value.mapNotNull { doc ->
             doc.toObject<User>()?.currentLocation?.let { LatLng(it.latitude,it.longitude) }
@@ -114,13 +124,27 @@ class VocConnectViewModel:ViewModel() {
     fun onSearch() {
         val upper = thisUser.locationSum.plus(0.15)
         val lower = thisUser.locationSum.minus(0.15)
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             loadingState =  true
             try {
-                availableworkerQuery = _availableworkerQuery.whereEqualTo("vocationalType",query)
+                availableworkerQuery = _availableworkerQuery.whereEqualTo("vocationalType",query).whereEqualTo("online",true)
                     .whereGreaterThanOrEqualTo("locationSum", lower)
                     .whereLessThanOrEqualTo("locationSum", upper)
                 _thoseUser.value = availableworkerQuery.get().await().documents.toMutableStateList()
+                println("level 1 searching for worker...")
+                println(_thoseUser.value.toList())
+                thoseUser = _thoseUser.value.mapNotNull { doc ->
+                    doc.toObject<User>()
+                }.toMutableStateList()
+                thoseUser.forEachIndexed { index, user ->
+                    println("we are here")
+                    if (user.currentLocation.latitude != 0.0 && user.currentLocation.longitude != 0.0 && index >= availableWorker.size){
+                        val route =
+                            getRoute(thisUser.currentLocation, user.currentLocation)!!
+                        availableWorker.add(AvailableWorker(user.profilePic,user.fullname,user.rating,route.distanceMeters?:"0 meter",route.duration?:"0 sec", pos = index))
+
+                    }
+                }
                 loadingState = false
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -146,14 +170,33 @@ class VocConnectViewModel:ViewModel() {
 
     fun updateLatLng(latitude: Double, longitude: Double) {
         locationState = LatLng(latitude, longitude)
+        currentUser.value.currentLocation  = LatLngs(latitude,longitude)
+        updateUser()
+
     }
 
     fun getPolygonLine() {
+        PolyUtil.decode("")
         if (thatUser.currentLocation.latitude == 0.0 && thatUser.currentLocation.longitude == 0.0) return
         loadingState = true
+        viewModelScope.launch(Dispatchers.IO) {
+          try {
+              polyline = PolyUtil.decode(  getRoute(thisUser.currentLocation, thatUser.currentLocation)?.polyline?.encodedPolyline ?: "" )
+              loadingState = false
+          }catch (e:Exception){
+              e.printStackTrace()
+              println(e.message)
+          }
+        }
+    }
+    private fun updateUser(){
         viewModelScope.launch {
-            polyline = PolyUtil.decode(getRoute(thisUser.currentLocation, thatUser.currentLocation)?.polyline?.encodedPolyline)
-            loadingState = false
+            try {
+                Firebase.firestore.collection("Users").document(thisUser.uid).set(currentUser.value).await()
+            }catch (e:Exception){
+                e.printStackTrace()
+                println(e.message)
+            }
         }
     }
 
@@ -179,7 +222,7 @@ class VocConnectViewModel:ViewModel() {
             ),
             travelMode = "DRIVE",
             routingPreference = "TRAFFIC_AWARE",
-            departureTime = "2023-12-21T15:01:23.045123456Z",
+            departureTime = formatTimestampToDate(Timestamp.now()),
             computeAlternativeRoutes = false,
             routeModifiers = RouteModifiers(
                 avoidTolls = false,
@@ -191,12 +234,17 @@ class VocConnectViewModel:ViewModel() {
         )
         val call = routeReq.getCompute(request)
         try {
+            println("About to get the route")
             val response = call.execute()
             route = response.body()?.routes?.get(0)
+            println("We got the route ")
+            println(" route is ${route?.distanceMeters} ${route?.polyline?.encodedPolyline}, ${route?.duration} ${route == null} ")
+            println("sucess:${response.isSuccessful} , code:${response.code()}, msg:${response.message()},error:${response.errorBody()?.string()} ")
 
         } catch (e: Exception) {
             e.printStackTrace()
             println(e.message)
+            println("error happen what happpen now................................................")
         }
         return route
 
@@ -204,17 +252,17 @@ class VocConnectViewModel:ViewModel() {
 
     var alertSucessfull by mutableStateOf(AlertWorkerState.Init)
     private var sessionSnapshotListener: ListenerRegistration? = null
-    private var sessionPath:String = ""
+    private var sessionPath:String =""
 
 
     fun sendJobAlert(){
-        val uid = Firebase.auth.currentUser?.uid ?:""
+        val uid = Firebase.auth.currentUser?.uid ?: currentUser.value.uid
         if(uid == "" || thatUser.uid == "")return
         val sessions = db.document(uid).collection("Session").document()
         viewModelScope.launch {
             try {
                 initiateSessionListener(sessions.path)
-                sessions.set(QuickSession(fullname = thisUser.fullname, profilePic = thisUser.profilePic)).await()
+                sessions.set(QuickSession(fullname = thisUser.fullname, profilePic = thisUser.profilePic, initID = thisUser.uid, initComments = thisUser.comments, initRating = thisUser.rating)).await()
                 sendNotification(sessions.path)
             }catch (e:Exception){
                e.printStackTrace()
@@ -236,35 +284,98 @@ class VocConnectViewModel:ViewModel() {
         }
     }
     fun selectUser(pos:Int){
-        thatUser = thoseUser.value[pos]
+        thatUser = thoseUser[pos]
     }
     fun initiateSessionListener(path:String){
         sessionPath = path
-        sessionSnapshotListener = db.document(path).addSnapshotListener { value, error ->
+        println("Initiating session with my path wawooo....... $sessionPath")
+        sessionSnapshotListener = Firebase.firestore.document(path).addSnapshotListener { value, error ->
             if (error != null) {
                 error.printStackTrace()
                 println(error.message)
                 return@addSnapshotListener
             }
-            transactSession = value?.toObject<QuickSession>() ?: transactSession
-        }
-    }
-    fun updateSession(){
-        viewModelScope.launch {
-            try {
-                db.document(sessionPath).set(transactSession).await()
-            }catch (e:Exception){
-                e.printStackTrace()
-                println(e.message)
+            if (value != null && value.exists()){
+                try {
+                    transactSession = value.toObject<QuickSession>() ?: transactSession
+                }catch (e:Exception){
+                    e.printStackTrace()
+                    println(e.message)
+                }
             }
         }
     }
+    val handler = CoroutineExceptionHandler { coroutineContext, throwable ->
+        throwable.printStackTrace()
+        println(throwable.message)
+    }
+    fun updateSession(){
+        loadingState=true
+        try {
+            println("Before level 2")
+            updates.document(sessionPath).set(transactSession)
+            println("sestionpath-> ${uuid.isBlank()} ${uuid.length} $uuid")
+            println("level 2")
+            loadingState=false
+        }catch (e:Exception){
+            loadingState=false
+            errorState=true
+            errorMsg = "Ouch!!! unexpected error check connection and retry"
+            e.printStackTrace()
+            println(e.message)
+        }
+    }
+    private fun formatTimestampToDate(timestamp: Timestamp): String {
+        val time = timestamp.toDate().time + 20000
+        val date = Date(time)
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'", Locale.getDefault())
+        dateFormat.timeZone = TimeZone.getDefault()
+        return dateFormat.format(date)
+    }
 
-    fun payWorker(){}
+    fun payWorker(){
+        transactSession.payed = true
+        updateSession()
+    }
     override fun onCleared() {
         sessionSnapshotListener?.remove()
         super.onCleared()
     }
 
+
+
+
+
+    fun reviewUser(navController: NavController){
+        if (thatUser.uid.isBlank()){
+            navController.navigate(ScreenRoute.HomeEntry.route){
+                popUpTo(ScreenRoute.HomeEntry.route){
+                    inclusive=true
+                }
+            }
+            return
+        }
+        loadingState = true
+        viewModelScope.launch {
+            try {
+                Firebase.firestore.collection("Users").document(thatUser.uid).set(thatUser).await()
+                loadingState = false
+                navController.navigate(ScreenRoute.HomeEntry.route){
+                    popUpTo(ScreenRoute.HomeEntry.route){
+                        inclusive=true
+                    }
+                }
+            }catch (e:Exception){
+                loadingState = false
+                navController.navigate(ScreenRoute.HomeEntry.route){
+                    popUpTo(ScreenRoute.HomeEntry.route){
+                        inclusive=true
+                    }
+                }
+                e.printStackTrace()
+                println(e.message)
+            }
+        }
+    }
 }
 

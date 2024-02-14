@@ -1,9 +1,13 @@
 package com.pioneers.jobgig.screens
 
+import android.Manifest
+import android.content.Context
 import android.content.res.Configuration
+import android.location.LocationManager
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +23,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,7 +33,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.PhoneInTalk
 import androidx.compose.material.icons.rounded.Search
@@ -52,6 +58,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -65,14 +72,19 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat.getSystemService
+import androidx.core.content.getSystemService
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.location.LocationServices
 import com.pioneers.jobgig.ChatRoom
 import com.pioneers.jobgig.R
@@ -83,6 +95,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ServiceSearch(viewmodel:VocConnectViewModel, navController: NavController){
     var state by rememberSaveable {
@@ -102,22 +115,39 @@ fun ServiceSearch(viewmodel:VocConnectViewModel, navController: NavController){
             }
         }
     }
-    Surface(color = MaterialTheme.colorScheme.background){
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            SearchCourseBtn(query = viewmodel.query,
-                onQuery = {update->viewmodel.updateQuery(update)},
-                modifier = Modifier.padding( vertical = 16.dp),
-                onSearch ={
-                    state = viewmodel.filteredVoc.isEmpty()
-                    onSearch(viewmodel, navController)
-            }, items = viewmodel.filteredVoc)
-            Text(text = "Categories", fontWeight = FontWeight.Bold, fontSize = MaterialTheme.typography.headlineSmall.fontSize)
-            Flows(items = viewmodel.vocCategory,
-                Modifier
-                    .weight(1f, true)
-                    .padding(horizontal = 12.dp), onSearch = {update->viewmodel.updateQuery(update) ;state = viewmodel.filteredVoc.isEmpty()
-                    onSearch(viewmodel, navController)})
+    val context =LocalContext.current
+    val locationManager = remember { context.getSystemService(Context.LOCATION_SERVICE) as LocationManager }
+    val isLocationEnabled = remember { locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) }
+    val permissions = rememberMultiplePermissionsState(permissions = listOf(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION) )
+    if (permissions.allPermissionsGranted && isLocationEnabled){
+        Surface(color = MaterialTheme.colorScheme.background){
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                SearchCourseBtn(query = viewmodel.query,
+                    onQuery = {update->viewmodel.updateQuery(update)},
+                    modifier = Modifier.padding( vertical = 16.dp),
+                    onSearch ={
+                        state = viewmodel.filteredVoc.isEmpty()
+                        onSearch(viewmodel, navController)
+                    }, items = viewmodel.filteredVoc)
+                Text(text = "Categories", fontWeight = FontWeight.Bold, fontSize = MaterialTheme.typography.headlineSmall.fontSize)
+                Flows(items = viewmodel.vocCategory,
+                    Modifier
+                        .weight(1f, true)
+                        .padding(horizontal = 12.dp), onSearch = {update->viewmodel.updateQuery(update) ;state = viewmodel.filteredVoc.isEmpty()
+                        onSearch(viewmodel, navController)})
+            }
         }
+    }
+    else if(!isLocationEnabled && permissions.allPermissionsGranted){
+        Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(text = "Please on Your Location to Enable this feature to work....")
+        }
+    }
+    else{
+        DisplayRationale(permisionState = permissions, rationale = listOf(stringResource(id = R.string.ACCESS_FINE_LOCATION),
+            stringResource(id = R.string.ACCESS_COARSE_LOCATION)))
     }
 
 }
@@ -125,7 +155,10 @@ fun ServiceSearch(viewmodel:VocConnectViewModel, navController: NavController){
 @Composable
 
 fun ServiceVocOnline(viewmodel: VocConnectViewModel, navController: NavController){
+//    val locationManager = LocalContext.current.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+//    locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
     val locationServices = LocationServices.getFusedLocationProviderClient(LocalContext.current)
+   //locationServices.locationAvailability
     Column(modifier = Modifier
         .fillMaxSize()
         .background(color = colorResource(id = R.color.btn))) {
@@ -139,13 +172,16 @@ fun ServiceVocOnline(viewmodel: VocConnectViewModel, navController: NavControlle
                     MapView(modifier = Modifier
                         .weight(2f)
                         .fillMaxWidth(),locationServices =locationServices , viewModel = viewmodel, polyline = null,workers = viewmodel.thoseUserLatLng.value)
-                    LazyColumn(modifier = Modifier.weight(1f)){
+                    LazyColumn(contentPadding = PaddingValues(vertical = 8.dp),modifier = Modifier.weight(1f)){
                         items(viewmodel.availableWorker){ item ->
                             WorkerCards(onClick = {viewmodel.selectUser(item.pos);navController.navigate(route = ScreenRoute.ServiceVocInfo.route)} ,profilePic = item.profilePic, name = item.name, distance = item.distance, ratings = item.rating, duration =item.duration )
                         }
                         item {
                             if(viewmodel.availableWorker.isEmpty()){
-                                Box(contentAlignment = Alignment.Center ,modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).fillMaxHeight()) {
+                                Box(contentAlignment = Alignment.Center ,modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                                    .fillMaxHeight()) {
                                     Text(text = "No Available Worker.... Sorry!!!", fontSize = MaterialTheme.typography.bodyLarge.fontSize, fontWeight = FontWeight.Bold)
                                 }
                             }
@@ -175,26 +211,28 @@ fun ServiceVocInfo(viewmodel: VocConnectViewModel, navController: NavController)
     }
     val scope = rememberCoroutineScope()
     val config = LocalConfiguration.current
+    if (confirmationState.value){
+        Dialog(onDismissRequest = { if (dismissible.value) confirmationState.value= false}) {
+            LaunchedEffect(key1 = true, block = {
+                viewmodel.sendJobAlert()
+                while (dismissprogress > 0){
+                    delay(1000);
+                    dismissprogress = dismissprogress.minus(0.01f)
+                    if(viewmodel.alertSucessfull == AlertWorkerState.Failed){
+                        dismissprogress = 0f
+                    }
+                }
+                dismissible.value = true
+            })
+            ServiceWaitingConfirm(progress = dismissprogress, navController,viewmodel)
+        }
+    }
     Column(modifier = Modifier
         .fillMaxSize()
         .background(color = colorResource(id = R.color.btn))) {
         Surface (modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()){
-            Dialog(onDismissRequest = { if (dismissible.value) confirmationState.value= false}) {
-                LaunchedEffect(key1 = true, block = {
-                    viewmodel.sendJobAlert()
-                    while (dismissprogress > 0){
-                        delay(1000);
-                        dismissprogress.minus(0.01f)
-                        if(viewmodel.alertSucessfull == AlertWorkerState.Failed){
-                            dismissprogress = 0f
-                        }
-                    }
-                    dismissible.value = true
-                })
-                ServiceWaitingConfirm(progress = dismissprogress, navController,viewmodel)
-            }
             Column(modifier = Modifier
                 .fillMaxSize()
                 .navigationBarsPadding()) {
@@ -233,26 +271,35 @@ fun ServiceSession(viewmodel: VocConnectViewModel, navController: NavController)
     val state = rememberSaveable {
         mutableStateOf(TransactionStage.AgreeStage)
     }
-    Column {
-        MapView(modifier = Modifier
-            .weight(1f)
-            .fillMaxWidth(),locationServices = locationServices, viewModel = viewmodel, polyline = viewmodel.polyline, workers =null)
-        when(state.value){
-            TransactionStage.AgreeStage -> {
-                AgreeBox(navController = navController,viewmodel = viewmodel, state)
-            }
-            TransactionStage.AgreedStage -> {
-                when(viewmodel.yourType.value){
-                    ClientType.Client->{
-                        ClientBox(viewModel = viewmodel, navController = navController)
+    Surface {
+        Column(modifier = Modifier
+            .systemBarsPadding()
+            .navigationBarsPadding()) {
+            MapView(modifier = Modifier
+                .weight(2f)
+                .fillMaxWidth(),locationServices = locationServices, viewModel = viewmodel, polyline = viewmodel.polyline, workers =null)
+            Surface(modifier = Modifier.weight(1f)) {
+                when(state.value){
+                    TransactionStage.AgreeStage -> {
+                        AgreeBox(navController = navController,viewmodel = viewmodel, state)
                     }
-                    ClientType.Worker -> {
-                        VocBox(viewModel = viewmodel, navController)
+                    TransactionStage.AgreedStage -> {
+                        when(viewmodel.yourType){
+                            ClientType.Client->{
+                                ClientBox(viewModel = viewmodel, navController = navController, state = state)
+                            }
+                            ClientType.Worker -> {
+                                VocBox(viewModel = viewmodel, navController,state)
+                            }
+                        }
+                    }
+                    TransactionStage.ReviewStage ->{
+                        RateService(viewmodel = viewmodel, navController = navController)
                     }
                 }
             }
+
         }
-        
     }
 
 }
@@ -261,14 +308,14 @@ fun ServiceChat(viewmodel: VocConnectViewModel,navController: NavController){
     var textState by rememberSaveable {
         mutableStateOf("")
     }
-    val headColor = if(LocalConfiguration.current.uiMode == Configuration.UI_MODE_NIGHT_NO) colorResource(id = R.color.btn)else MaterialTheme.colorScheme.surfaceVariant
+    val headColor = if(!isSystemInDarkTheme()) colorResource(id = R.color.btn)else MaterialTheme.colorScheme.surfaceVariant
     
     Box(modifier = Modifier
         .fillMaxSize()
         .background(color = headColor)) {
         ConversationHeader(navController,modifier = Modifier
             .fillMaxHeight(0.2f)
-            .statusBarsPadding())
+            .statusBarsPadding(), viewModel = viewmodel)
         Surface(shape = RoundedCornerShape(topStartPercent = 12, topEndPercent = 12),color = MaterialTheme.colorScheme.background, modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight(0.75f)
@@ -297,8 +344,9 @@ fun ServiceChat(viewmodel: VocConnectViewModel,navController: NavController){
                                 .toMutableList()
                                 .also { it.add(UserMessage(viewmodel.thisUser.profilePic,textState,uuid=viewmodel.uuid))}
                         viewmodel.updateSession()
+                        textState=""
                     }) {
-                        Icon(imageVector = Icons.Rounded.Send, contentDescription = "")
+                        Icon(imageVector = Icons.AutoMirrored.Rounded.Send, contentDescription = "")
                     }} ,modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
@@ -311,13 +359,15 @@ fun ServiceChat(viewmodel: VocConnectViewModel,navController: NavController){
 }
 
 @Composable
-fun SearchRes(query: String){
-    Row (horizontalArrangement = Arrangement.spacedBy(8.dp),verticalAlignment = Alignment.CenterVertically,modifier = Modifier.fillMaxWidth()){
-        IconButton(modifier = Modifier.clip(CircleShape),colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant), onClick = { /*TODO*/ }) {
+fun SearchRes(query: String, onClick:()->Unit){
+    Row (horizontalArrangement = Arrangement.spacedBy(8.dp),verticalAlignment = Alignment.CenterVertically,modifier = Modifier
+        .fillMaxWidth()
+        .clickable { onClick.invoke() }){
+        IconButton(modifier = Modifier.clip(CircleShape),colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant), onClick = {onClick.invoke()}) {
             Icon(imageVector = Icons.Rounded.Search, contentDescription = "")
         }
         Text(text = query, modifier = Modifier.weight(1f, true))
-        IconButton(onClick = { /*TODO*/ }) {
+        IconButton(onClick = { onClick.invoke()}) {
             Icon(modifier = Modifier.rotate(-45f),imageVector = Icons.Rounded.ArrowUpward, contentDescription = "")
         }
     }
@@ -332,13 +382,17 @@ fun onSearch(viewmodel: VocConnectViewModel, navController: NavController){
     navController.navigate(route = ScreenRoute.ServiceVocOnline.route)
 }
 @Composable
-fun ConversationHeader(navController: NavController,modifier: Modifier){
+fun ConversationHeader(navController: NavController,modifier: Modifier,viewModel: VocConnectViewModel){
     Column(modifier = modifier) {
         IconButton(onClick = {navController.popBackStack() }) {
-            Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "", tint = Color.White)
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                contentDescription = "",
+                tint = Color.White
+            )
         }
         Row (verticalAlignment = Alignment.CenterVertically,horizontalArrangement = Arrangement.spacedBy(4.dp) ,modifier = Modifier.padding(horizontal = 16.dp)){
-            Text(modifier = Modifier.weight(1f),text = "Justin Samuel", fontSize = MaterialTheme.typography.bodyLarge.fontSize, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(modifier = Modifier.weight(1f),text = viewModel.thatUser.fullname, fontSize = MaterialTheme.typography.bodyLarge.fontSize, fontWeight = FontWeight.Bold, color = Color.White)
             IconButton(onClick = { /*TODO*/ }) {
                 Icon(imageVector = Icons.Rounded.PhoneInTalk, contentDescription = "",tint = Color.White)
             }
@@ -355,7 +409,11 @@ fun Header(title:String){
         .fillMaxWidth()
         .background(color = colorResource(id = R.color.btn))) {
         IconButton(onClick = { /*TODO*/ }) {
-            Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "", tint = Color.White)
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                contentDescription = "",
+                tint = Color.White
+            )
         }
         Text(text = title, modifier = Modifier.weight(1f,true), textAlign = TextAlign.Center, color = Color.White, fontSize = MaterialTheme.typography.bodyLarge.fontSize, fontWeight = FontWeight.Bold)
     }
@@ -390,7 +448,7 @@ fun SearchCourseBtn(query: String,onQuery:(query:String)->Unit,modifier: Modifie
     }
     LaunchedEffect(key1 = active){onQuery("")}
     val padding = if (active)0.dp else 16.dp
-    val trailing = if (active) Icons.Rounded.ArrowBack else Icons.Rounded.Search
+    val trailing = if (active) Icons.AutoMirrored.Rounded.ArrowBack else Icons.Rounded.Search
     SearchBar(placeholder = { Text(text = "Search for vocational worker",
         fontSize = MaterialTheme.typography.labelSmall.fontSize,
         fontWeight = FontWeight.Medium)},
@@ -405,7 +463,7 @@ fun SearchCourseBtn(query: String,onQuery:(query:String)->Unit,modifier: Modifie
         onActiveChange = { update->active = update}) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp) ,contentPadding = PaddingValues(16.dp),state = rememberLazyListState()){
             items(items = items){
-                SearchRes(query = it)
+                SearchRes(query = it) { onSearch(it) }
             }
         }
 
@@ -429,6 +487,7 @@ enum class VocationalCategory{
     Automotive0Repair,
     Bricklayer,
     Knitting,
+    ShoeMaker,
     Furniture0Restoration,
     Welding,
     Jewelry0Making,
@@ -441,7 +500,8 @@ enum class VocationalCategory{
 }
 enum class TransactionStage{
     AgreeStage,
-    AgreedStage
+    AgreedStage,
+    ReviewStage
 }
 enum class ClientType{
     Client,

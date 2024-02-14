@@ -18,20 +18,22 @@ import kotlinx.coroutines.tasks.await
 
 class OnBoardViewModel:ViewModel() {
     companion object{
-        var currentUser:User by mutableStateOf(User())
+        var currentUser = mutableStateOf(User())
 
     }
     fun updateUser(user:User){
-        currentUser = user
+        currentUser.value = user
     }
 
     private var email by mutableStateOf("")
     private var password by mutableStateOf("")
     private var fullname by mutableStateOf("")
     private var errorEmail by mutableStateOf("")
+    private var errorName by mutableStateOf("")
     private var errorPassword by mutableStateOf("")
     private var isError by mutableStateOf(false)
     private var isErrorP by mutableStateOf(false)
+    private var isErrorN by mutableStateOf(false)
     private var isLoading by mutableStateOf(false)
     var shouldShowEmailVerifyLogin by mutableStateOf(false)
     var shouldShowEmailVerifySignUp by mutableStateOf(false)
@@ -59,11 +61,15 @@ class OnBoardViewModel:ViewModel() {
         get() = isError
     val _isErrorP
         get() = isErrorP
+    val _isErrorN
+        get() = isErrorN
+    val _errorName
+        get() = errorName
 
     fun updateEmail(update:String){
         errorEmail = ""
         isError = false
-        email = update
+        email = update.trim()
     }
     fun clearInfos(){
         email = ""
@@ -104,7 +110,7 @@ class OnBoardViewModel:ViewModel() {
                     if (user != null){
                         val nullable = Firebase.firestore.collection("Users").document(user.uid).get().await().toObject<User>()
                         if (nullable != null){
-                            currentUser = nullable
+                            currentUser.value = nullable
                             sucess = true
                         }
                     }
@@ -123,6 +129,11 @@ class OnBoardViewModel:ViewModel() {
         if(!password.matches(reg)){
             errorPassword = "Password Must Contain Uppercase, Number , and Special charcater(@#$)"
             isErrorP = true
+            return
+        }
+        if(fullname.isBlank()){
+            errorName = "Your Fullname is required...."
+            isErrorN = true
             return
         }
         isLoading = true

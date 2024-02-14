@@ -1,7 +1,6 @@
 package com.pioneers.jobgig
 
 
-import android.app.Dialog
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -28,9 +27,11 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.Firebase
+import com.google.firebase.appcheck.appCheck
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.toObject
+import com.google.firebase.initialize
 import com.pioneers.jobgig.dataobj.utils.User
 import com.pioneers.jobgig.screens.ScreenNav
 import com.pioneers.jobgig.screens.ScreenRoute
@@ -40,6 +41,7 @@ import kotlinx.coroutines.tasks.await
 
 class MainActivity : ComponentActivity() {
 //    val db = Firebase.firestore.collection("Courses")
+
 
     var keep = true
 
@@ -71,7 +73,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             JobGigTheme {
                 var loadingState by rememberSaveable {
-                    mutableStateOf(true)
+                    mutableStateOf(false)
                 }
                 var retry by rememberSaveable {
                     mutableIntStateOf(0)
@@ -94,30 +96,32 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-//                if (user == null || !user.isEmailVerified){
-//                    keep=false
-//                    ScreenNav(navHostController = rememberNavController(), start =ScreenRoute.GetStarted.route )
-//                }
-//                else if(user.isEmailVerified){
-//                    LaunchedEffect(key1 = retry){
-//                       try {
-//                           loadingState=true
-//                           OnBoardViewModel.currentUser =
-//                               Firebase.firestore.collection("Users").document(user.uid).get().await().toObject<User>()!!
-//                           loadingState =false
-//                       }catch (e:Exception){
-//                           loadingState=false
-//                           errorState = true
-//                           errorMsg = "ouch!!! unexpected error check your connection and  retry"
-//                           e.printStackTrace()
-//                           println(e.message)
-//                       }
-//                    }
-//                    if (!loadingState && !errorState){
-//                        keep=false
-//                        ScreenNav(navHostController = rememberNavController(), start =ScreenRoute.HomeEntry.route )
-//                    }
-//                }
+                Surface(color = MaterialTheme.colorScheme.background) {
+                    if (user == null || !user.isEmailVerified){
+                        keep=false
+                        ScreenNav(navHostController = rememberNavController(), start = ScreenRoute.GetStarted.route )
+                    }
+                    else if(user.isEmailVerified){
+                        LaunchedEffect(key1 = retry){
+                            try {
+                                loadingState=true
+                                OnBoardViewModel.currentUser.value =
+                                    Firebase.firestore.collection("Users").document(user.uid).get().await().toObject<User>()!!
+                                loadingState =false
+                            }catch (e:Exception){
+                                loadingState=false
+                                errorState = true
+                                errorMsg = "ouch!!! unexpected error check your connection and  retry"
+                                e.printStackTrace()
+                                println(e.message)
+                            }
+                        }
+                        if (!loadingState && !errorState){
+                            keep=false
+                            ScreenNav(navHostController = rememberNavController(), start = ScreenRoute.HomeEntry.route )
+                        }
+                    }
+                }
 //                NavHost(navController = rememberNavController(), startDestination = "alert"){
 //                    composable("alert"){
 //                        Simulator()

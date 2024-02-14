@@ -63,6 +63,7 @@ sealed class ScreenRoute(var route: String){
     object CreateTutorial:ScreenRoute("create_tut")//dones
     object UploadTutorial:ScreenRoute("upload_tut")//dones
     object GigAlert:ScreenRoute("gig_alert")
+    object Notification:ScreenRoute("notifications")
 
 
 }

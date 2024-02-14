@@ -56,11 +56,12 @@ class ChatRoom {
             Row(modifier = Modifier.fillMaxWidth()) {
                 Spacer(modifier = Modifier.width(2.dp))
                 AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current).data(painter).error(R.drawable.round_account_circle_24), contentDescription = "", modifier = Modifier
+                    model = ImageRequest.Builder(LocalContext.current).data(painter).error(R.drawable.round_account_circle_24).build(),
+                    contentScale = ContentScale.Crop,
+                    contentDescription = "",
+                    modifier = Modifier
                         .size(30.dp)
-                        .clip(
-                            CircleShape
-                        )
+                        .clip(CircleShape)
                 )
                Spacer(modifier = Modifier.width(2.dp))
                 Surface(modifier = Modifier

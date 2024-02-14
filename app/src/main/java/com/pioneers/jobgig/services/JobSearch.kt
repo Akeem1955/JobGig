@@ -20,12 +20,27 @@ import com.google.firebase.firestore.toObject
 import com.pioneers.jobgig.MainActivity
 import com.pioneers.jobgig.R
 import com.pioneers.jobgig.dataobj.utils.User
+import com.pioneers.jobgig.screens.onlineState
+import com.pioneers.jobgig.viewmodels.OnBoardViewModel
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.util.concurrent.CancellationException
+import kotlin.coroutines.CoroutineContext
 
 class JobSearch: Service() {
     private var staledAlert ="init"
+    private var running = false
+    //private var Ses
+    private val db = Firebase.firestore
     private lateinit var managerCompat: NotificationManagerCompat
     private lateinit var channelCompat: NotificationChannelCompat
-    private val joblisterner = Firebase.firestore.collection("Users").document("test").addSnapshotListener { value, error ->
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val joblisterner = Firebase.firestore.collection("Users").document(OnBoardViewModel.currentUser.value.uid).addSnapshotListener { value, error ->
         println("Service Still Working")
         println(value?.getString("tester"))
 
@@ -36,50 +51,65 @@ class JobSearch: Service() {
             }
             else if(user != null && staledAlert != user.alert){
                 println(user.alert)
+                scope.launch {
+                    try {
+                        simulateJobrecieve(user.alert.replace("/","_"))
+                        onlineState = false
+                        db.collection("Users")
+                            .document(Firebase.auth.currentUser?.uid ?: OnBoardViewModel.currentUser.value.uid).set(OnBoardViewModel.currentUser.value).await()
+                        println(OnBoardViewModel.currentUser.value.online)
+                        managerCompat.cancel(10023)
+                        stopSelf()
+                    }catch (e:Exception){
+                        e.printStackTrace()
+                        println(e.message)
+                    }
+                }
+
             }
         }
     }
-
+    private val handler = CoroutineExceptionHandler { _, throwable ->
+        println(throwable.message)
+        throwable.printStackTrace()
+    }
 
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null && intent.action != null) {
            when(intent.action){
                "online_stop"->{
-                   managerCompat.cancel(10023)
-                   stopSelf()
+                   if(running){
+                       scope.launch(handler) {
+                           OnBoardViewModel.currentUser.value.online = false
+                           onlineState = false
+                           db.collection("Users")
+                               .document(Firebase.auth.currentUser?.uid ?: OnBoardViewModel.currentUser.value.uid).set(OnBoardViewModel.currentUser.value).await()
+                           println(OnBoardViewModel.currentUser.value.online)
+                           managerCompat.cancel(10023)
+                           stopSelf()
+                       }
+                   }
                    return START_NOT_STICKY
                }
                "reject_job"->{
                    managerCompat.cancel(1957)
                    return START_STICKY
                }
-               "accept_job"->{
-
-                   val nav = NavController(this)
-                   nav.navigate(deepLink = Uri.parse("com.pioneers.jobgig/Android dev is sweet"))
-//                   val intents = Intent(Intent.ACTION_VIEW, Uri.parse("com.pioneers.jobgig/Android dev is sweet"))
-//                   println("Job Accepting processing...")
-//                   startActivity(intents)
-
-                   return START_STICKY
-               }
-               "simulate_job"->{
-                   simulateJobrecieve()
-                   return START_STICKY
-               }
            }
         }
         startForeground(10023, createNotification())
+        running = true
         return START_STICKY
     }
 
     @SuppressLint("MissingPermission")
-    private fun simulateJobrecieve(){
+    private fun simulateJobrecieve(path:String){
+
         val title = "You Got A Gig"
         val intent_stop = Intent(this, com.pioneers.jobgig.services.JobSearch::class.java)
         intent_stop.setAction("reject_job")
-        val intent_accept = Intent(Intent.ACTION_VIEW,Uri.parse("jobgig://confirm-gig/Atlast Chai"))
+        val intent_accept = Intent(Intent.ACTION_VIEW,Uri.parse("jobgig://confirm-gig/$path"))
         //intent_accept.setData(Uri.parse("deep"))
         val intent =
             PendingIntent.getService(this, 1956, intent_stop, PendingIntent.FLAG_IMMUTABLE)
@@ -139,6 +169,7 @@ class JobSearch: Service() {
     override fun onDestroy() {
         super.onDestroy()
         joblisterner.remove()
+        scope.cancel(CancellationException("On Destroy not needed anymore!!!!"))
         println("Service is destroyed")
     }
 

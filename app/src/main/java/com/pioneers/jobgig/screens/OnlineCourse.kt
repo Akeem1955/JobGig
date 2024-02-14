@@ -37,15 +37,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.StarRate
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -81,7 +81,6 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.Lifecycle
@@ -99,8 +98,8 @@ import com.pioneers.jobgig.sealed.CourseContentDesign
 import com.pioneers.jobgig.sealed.CourseInfoDesign
 import com.pioneers.jobgig.services.preference.AppPreference
 import com.pioneers.jobgig.services.preference.datastore
-import com.pioneers.jobgig.ui.theme.JobGigTheme
 import com.pioneers.jobgig.viewmodels.CourseViewModel
+import com.pioneers.jobgig.viewmodels.OnBoardViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 
 
@@ -122,13 +121,17 @@ fun InstructorDetailScreen(uri: String, about:String,navController: NavControlle
                     .fillMaxHeight(0.5f)
                     .clip(MaterialTheme.shapes.small)
                     ,contentScale = ContentScale.Crop ,model =ImageRequest.Builder(LocalContext.current).data(Uri.parse(uri)).error(R.drawable.round_image_24).build() , contentDescription = "")
-                Divider()
+                HorizontalDivider()
                 Text(text = "About", fontWeight = FontWeight.Bold)
                 Text(text =about)
             }
         }
         IconButton(modifier = Modifier.statusBarsPadding() ,onClick = { navController.popBackStack() }) {
-            Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "", tint = MaterialTheme.colorScheme.onBackground)
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                contentDescription = "",
+                tint = MaterialTheme.colorScheme.onBackground
+            )
         }
     }
 }
@@ -143,9 +146,9 @@ fun Screen1(viewModel: CourseViewModel, navController: NavController){
             }
         }
         Column(modifier = Modifier.fillMaxSize()) {
-            Header(modifier = Modifier.padding(top = it.calculateTopPadding(), start = 16.dp, end = 16.dp),
-                uri =Uri.parse("https://images.unsplash.com/photo-1695653420644-ab3d6a039d53?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDF8MHxlZGl0b3JpYWwtZmVlZHwxfHx8ZW58MHx8fHx8"),
-                title = "Find your favorite course")
+            Header(navController = navController,modifier = Modifier.padding(top = it.calculateTopPadding(), start = 16.dp, end = 16.dp),
+                uri =Uri.parse(OnBoardViewModel.currentUser.value.profilePic),
+                title = "Find your favorite tutorial")
             Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.weight(1f)) {
                 Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier
                     .fillMaxWidth()
@@ -186,7 +189,8 @@ fun Screen3(viewModel: CourseViewModel, navController: NavController){
     Surface(color = colorResource(id = R.color.btn3)) {
         Column(modifier = Modifier.fillMaxSize()) {
             HeaderMin(modifier = Modifier
-                .padding(bottom = 8.dp).statusBarsPadding(), uri = null, title ="All Category",navController)
+                .padding(bottom = 8.dp)
+                .statusBarsPadding(), uri = Uri.parse(OnBoardViewModel.currentUser.value.profilePic), title ="All Category",navController)
             Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()) {
@@ -236,6 +240,11 @@ fun Screen4(viewModel: CourseViewModel, query:String,navController: NavControlle
                     itemsIndexed(searchresults){pos, item ->
                         if (item != null) {
                             CourseCardSearch(data = item, navController =navController,pos,"search")
+                        }
+                    }
+                    item { 
+                        if(searchresults.isEmpty()){
+                            Text(text = "No Tutorial match your search keyword!!!", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -291,7 +300,9 @@ fun Screen5(viewModel: CourseViewModel,navController: NavController){
 fun Screen6(type:String, position:Int,viewModel: CourseViewModel, navController: NavController){
     //enroll preview
     val coursedata = if(type == "search") viewModel.searchResultCourse.value[position] else viewModel.popularCourse.value[position]
-    Box(modifier = Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.background)) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .background(color = MaterialTheme.colorScheme.background)) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current).error(R.drawable.round_image_24).data(coursedata?.imageUri).build(),
             contentDescription = "",
@@ -302,7 +313,6 @@ fun Screen6(type:String, position:Int,viewModel: CourseViewModel, navController:
                 .align(alignment = Alignment.TopCenter)
                 .fillMaxHeight(0.4f))
         Surface(
-            color = MaterialTheme.colorScheme.surfaceVariant,
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.7f)
@@ -313,7 +323,7 @@ fun Screen6(type:String, position:Int,viewModel: CourseViewModel, navController:
                 .navigationBarsPadding()
             ) {
                 LazyColumn(state = rememberLazyListState(), modifier= Modifier
-                    .padding(start = 16.dp, end = 16.dp)
+                    .padding(16.dp)
                     .weight(1f, true)){
                     item {
                         CourseIntroRate(
@@ -343,8 +353,8 @@ fun Screen6(type:String, position:Int,viewModel: CourseViewModel, navController:
                         Text(text = "Free", modifier = Modifier
                             .weight(1f, true)
                             .background(color = MaterialTheme.colorScheme.background), textAlign = TextAlign.Center, fontSize = MaterialTheme.typography.bodyLarge.fontSize, fontWeight = FontWeight.ExtraBold)
-                        Text(color = Color.White,text = "Enroll Now", modifier = Modifier
-                            .background(color = Color.Magenta)
+                        Text(color = Color.White,text = "Subscribe Now", modifier = Modifier
+                            .background(color = colorResource(id = R.color.btn))
                             .clickable {
                                 navController.navigate(
                                     route = ScreenRoute.EnrolledConfirmed.enrollIndex(
@@ -363,8 +373,10 @@ fun Screen6(type:String, position:Int,viewModel: CourseViewModel, navController:
                 }
             }
         }
-        IconButton(onClick = {navController.popBackStack()}, modifier = Modifier.statusBarsPadding()) {
-            Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "")
+        IconButton(onClick = {if (navController.canGoBack)navController.popBackStack()}, modifier = Modifier.statusBarsPadding()) {
+            Icon(imageVector = Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "", tint = colorResource(
+                id = R.color.btn
+            ))
         }
     }
 }
@@ -377,13 +389,17 @@ fun Screen7(navController: NavController, viewModel: CourseViewModel, type: Stri
             .padding(12.dp)
             .statusBarsPadding()) {
             IconButton(onClick = {navController.popBackStack() }) {
-                Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "", tint = MaterialTheme.colorScheme.onBackground)
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                    contentDescription = "",
+                    tint = MaterialTheme.colorScheme.onBackground
+                )
             }
             Row(modifier = Modifier.heightIn(max = 120.dp),horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 AsyncImage(modifier = Modifier.weight(1f,true),model = ImageRequest.Builder(LocalContext.current).data(coursedata?.imageUri).build(), contentDescription = "")
 
                 Column(modifier = Modifier.weight(2f,true) ,verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(text = "You are now enrolled in:")
+                    Text(text = "You are now subscribed to:")
                     Text(text ="${coursedata?.title}" )
                     Text(text = "${
                         coursedata?.instructorInfo?.joinToString(",") {
@@ -486,7 +502,7 @@ fun SearchCourseBtn(modifier: Modifier, navController: NavController){
 @Composable
 fun TopCategoryItem(category:String, iconRes:Int,color:String, navController: NavController,query: String ){
     println("$color nah you Cause am")
-    Surface(color = Color(android.graphics.Color.parseColor(color)),shape = MaterialTheme.shapes.medium, modifier = Modifier
+    Surface(shape = MaterialTheme.shapes.large, tonalElevation = 32.dp, shadowElevation = 8.dp, modifier = Modifier
         .width(120.dp)
         .clickable { navController.navigate(route = ScreenRoute.SearchCourseResult.query(query)) }
         .height(158.dp)) {
@@ -497,7 +513,7 @@ fun TopCategoryItem(category:String, iconRes:Int,color:String, navController: Na
                     contentDescription ="",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(width = 64.dp, height = 64.dp)
+                        .size(width = 40.dp, height = 40.dp)
                         .clip(CircleShape))
             }
             Text(text = category, modifier = Modifier.padding(bottom = 8.dp), textAlign = TextAlign.Center)
@@ -565,13 +581,17 @@ fun PopularCourseCard(data:CourseData){
     }
 }
 @Composable
-fun Header(modifier: Modifier, uri: Uri?,title:String){
+fun Header(modifier: Modifier, uri: Uri?,title:String,navController: NavController){
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Row(verticalAlignment = Alignment.CenterVertically,horizontalArrangement = Arrangement.SpaceBetween, modifier= Modifier
             .fillMaxWidth()
             .padding(top = 8.dp)) {
-            IconButton(onClick = { /*TODO*/ }) {
-                Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "", tint = Color.White)
+            IconButton(onClick = { if (navController.canGoBack)navController.popBackStack()}) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                    contentDescription = "",
+                    tint = Color.White
+                )
             }
             AsyncImage(contentScale = ContentScale.Crop ,model = ImageRequest.Builder(LocalContext.current).decoderFactory(SvgDecoder.Factory()).placeholder(R.drawable.round_account_circle_24).data(uri).build(), contentDescription = "",modifier = Modifier
                 .size(60.dp)
@@ -588,9 +608,13 @@ fun HeaderMin(modifier: Modifier, uri: Uri?,title:String, navController: NavCont
             .fillMaxWidth()
             .padding(top = 8.dp, end = 8.dp)) {
             IconButton(onClick = {navController.popBackStack() }) {
-                Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = "", tint = Color.White)
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                    contentDescription = "",
+                    tint = Color.White
+                )
             }
-            AsyncImage(contentScale = ContentScale.Crop ,model = ImageRequest.Builder(LocalContext.current).decoderFactory(SvgDecoder.Factory()).error(R.drawable.jewelry).data(uri).build(), contentDescription = "",modifier = Modifier
+            AsyncImage(contentScale = ContentScale.Crop ,model = ImageRequest.Builder(LocalContext.current).decoderFactory(SvgDecoder.Factory()).error(R.drawable.round_account_circle_24).data(uri).build(), contentDescription = "",modifier = Modifier
                 .size(50.dp)
                 .clip(CircleShape))
 
@@ -598,29 +622,40 @@ fun HeaderMin(modifier: Modifier, uri: Uri?,title:String, navController: NavCont
         Text(color = Color.White,text = title, fontSize = MaterialTheme.typography.bodyLarge.fontSize, lineHeight = MaterialTheme.typography.headlineMedium.lineHeight, fontWeight = FontWeight.Bold)
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Search(navController: NavController,viewModel: CourseViewModel){
+fun Search(navController: NavController, viewModel: CourseViewModel) {
     val ctx = LocalContext.current
     var query by rememberSaveable {
         mutableStateOf("")
     }
     val recentSearch by ctx.datastore.data.collectAsStateWithLifecycle(initialValue = AppPreference())
-    val icon = Icons.Rounded.ArrowBack
+    val icon = Icons.AutoMirrored.Rounded.ArrowBack
 
-    SearchBar(placeholder = { Text(text = "Search for courses")},
-        leadingIcon = { Icon(imageVector = icon, contentDescription = "")},
+    SearchBar(placeholder = { Text(text = "Search for courses") },
+        leadingIcon = { Icon(imageVector = icon, contentDescription = "") },
         query = query,
-        onQueryChange = {update->query = update},
-        onSearch = {viewModel.updateRecentSearches(ctx.datastore,query);navController.navigate(route = ScreenRoute.SearchCourseResult.query(query)){
-            popUpTo(ScreenRoute.SearchCourse.route){inclusive = true}
-        } },
-        active = true, onActiveChange = {update->
-            if(!update){
+        onQueryChange = { update -> query = update },
+        onSearch = {
+            viewModel.updateRecentSearches(
+                ctx.datastore,
+                query
+            );navController.navigate(route = ScreenRoute.SearchCourseResult.query(query)) {
+            popUpTo(ScreenRoute.SearchCourse.route) { inclusive = true }
+        }
+        },
+        active = true, onActiveChange = { update ->
+            if (!update) {
                 navController.popBackStack()
-            }}) {
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp),contentPadding = PaddingValues(16.dp), state = rememberLazyListState()){
-            items(recentSearch.searches){item->
+            }
+        }) {
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(16.dp),
+            state = rememberLazyListState()
+        ) {
+            items(recentSearch.searches) { item ->
                 RecentSearch(navController = navController, keyword = item)
             }
         }
