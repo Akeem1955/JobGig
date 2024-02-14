@@ -1,18 +1,32 @@
-JobGIG: 
-A Platforms That Gives Value to Vocational Worker/ People With Vocational Skills By connecting Them With Potential Employers
-Also Providing a feature to upload tutorial for other vocational workers to benefit and upgrade thier skillls
-thereby making them employable and also give the tutorial maker some public awareness about his skills
 
-And it also provide a section where Vocational worker can request for Either Workspace Or Tools which will be request from other using using the app and willing to donate 
-the workspace is worksapce but the request for tools will be turn into monetary request which we will help them request so they will be able to get the tools 
+---
 
+# JobGIG: Empowering Vocational Workers and Building Stronger Communities
 
+Welcome to JobGIG, a platform designed to empower vocational workers by connecting them with potential employers, providing valuable tutorials, and facilitating access to workspace and tools.
 
+## Features
 
-Requirement For Running the code:
-Due to easy to be able to run the code we have put all the requiremnt for easy build 
-except from the google map api key 
-all that is needed is to update the api key value in local.properties under build script directory
-put your map api key in local.properties under gradle scripts
+### Connecting Vocational Workers with Employers
+- JobGIG bridges the gap between vocational workers and employers, facilitating meaningful connections that lead to employment opportunities.
 
-maps_api_key={Your Google Cloud Api key}
+### Tutorial Uploads for Skill Enhancement
+- Vocational workers can upload tutorials to share their expertise and help others upgrade their skills, fostering a supportive community of learning and growth.
+
+### Workspace and Tools Requests
+- Need a workspace or specific tools for your vocational work? JobGIG allows users to request these essentials from others in the community who are willing to donate or support financially.
+
+## Requirements for Running the Code
+
+To ensure smooth building and running of the code, we have included the Gradle build files in the repository, and the `google-services.json` file is also present. All you need to do is obtain a Google Maps API key and update its value in the `local.properties` file located under the build script directory. Simply insert your map API key as follows:
+
+```
+maps_api_key={Your Google Cloud API key}
+```
+
+This straightforward process will enable the integration of Google Maps functionality into the application seamlessly.
+
+## Installation via APK
+
+For an easy and hassle-free way to experience JobGIG, you can install the APK file directly. Find the APK in the [jobgig_apk](https://github.com/Akeem1955/JobGig/tree/master/jobgig_apk) directory.
+
