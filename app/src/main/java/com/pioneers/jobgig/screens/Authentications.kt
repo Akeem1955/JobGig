@@ -39,7 +39,6 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowForwardIos
 import androidx.compose.material.icons.rounded.AccessTime
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Circle
-import androidx.compose.material.icons.rounded.StarHalf
 import androidx.compose.material.icons.rounded.StarRate
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -737,7 +736,7 @@ fun RatingBar(ratings:Double){
             if (rating >= 1){
                 Icon(imageVector = Icons.Rounded.StarRate, contentDescription ="", tint = Color.Green )
             }else if (rating > 0){
-                Icon(imageVector = Icons.Rounded.StarHalf, contentDescription ="", tint = Color.Green )
+                Icon(imageVector = Icons.AutoMirrored.Rounded.StarHalf, contentDescription ="", tint = Color.Green )
             }
             else{
                 Icon(imageVector = Icons.Rounded.StarRate, contentDescription ="", tint = Color.Gray )
@@ -755,7 +754,7 @@ fun WorkerCards(onClick:()->Unit, modifier: Modifier = Modifier, profilePic: Str
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant,
         modifier = modifier
-            .clickable {onClick.invoke()}
+            .clickable { onClick.invoke() }
             .height(80.dp)
             .fillMaxWidth()
             .padding(horizontal = 12.dp),

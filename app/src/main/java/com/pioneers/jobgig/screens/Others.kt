@@ -48,14 +48,12 @@ import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
-import androidx.compose.material.icons.rounded.Payment
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Phone
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.QuestionAnswer
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.UploadFile
-import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -81,7 +79,6 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -110,9 +107,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.decode.VideoFrameDecoder
 import coil.request.ImageRequest
@@ -354,7 +349,7 @@ fun ManageTuts(viewmodel: TutCreate,navController: NavController){
                 fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                 fontWeight = FontWeight.Bold)
         }
-        Surface() {
+        Surface {
            Column(modifier = Modifier
                .fillMaxSize()
                .navigationBarsPadding()) {
@@ -631,6 +626,14 @@ fun VocationalDashboard(navController: NavController, viewmodel: DashboardViewmo
                    }
                    }
                    item {HomeCardView(type = HomeCardViews.Courses, navController = navController, route =ScreenRoute.HomeScreenCourse.route ) }
+                   item {
+                       HomeCardView(
+                           type = HomeCardViews.VocaSage,
+                           navController = navController,
+                           route = ScreenRoute.HomeScreenCourse.route
+                       )
+                   }
+
                    item { Spacer(modifier = Modifier.height(16.dp)) }
                }
            }

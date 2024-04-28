@@ -12,12 +12,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowForwardIos
+import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.CardGiftcard
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.SpaceDashboard
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,10 +53,17 @@ import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.firestore
 import com.google.firebase.ktx.Firebase
 import com.pioneers.jobgig.R
+import com.pioneers.jobgig.dataobj.utils.Trends
+import com.pioneers.jobgig.dataobj.utils.trendData
 import com.pioneers.jobgig.sealed.HomeCardViews
 import com.pioneers.jobgig.viewmodels.OnBoardViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 
 @Composable
@@ -83,7 +91,7 @@ fun HomeCardView(type:HomeCardViews, navController: NavController, route:String)
                     Text(text = type.label, fontSize = MaterialTheme.typography.labelSmall.fontSize, lineHeight = MaterialTheme.typography.labelSmall.lineHeight)
                 }
                 IconButton(onClick = { navController.navigate(route = route) }) {
-                    Icon(tint= MaterialTheme.colorScheme.surfaceTint,imageVector = Icons.Outlined.ArrowForwardIos, contentDescription ="")
+                    Icon(tint= MaterialTheme.colorScheme.surfaceTint,imageVector = Icons.AutoMirrored.Outlined.ArrowForwardIos, contentDescription ="")
                 }
 
             }
@@ -149,6 +157,20 @@ fun HomeScreen(navController: NavController){
                     if(OnBoardViewModel.currentUser.value.verified){
                         item { HomeCardView(type = HomeCardViews.Courses, navController = navController, ScreenRoute.HomeScreenCourse.route ) }
                     }
+                    item {
+                        val scope = CoroutineScope(Dispatchers.IO)
+                        Button(onClick = {
+                            scope.launch {
+                                val db = com.google.firebase.Firebase.firestore.collection("Trends")
+                                    .add(Trends(trendData)).await()
+                                val dbs = com.google.firebase.Firebase.firestore
+                                    .collection("Trends")
+                                    .document("Sentiment")
+                            }
+                        }) {
+                            Text(text = "Click")
+                        }
+                    }
                 }
             }
         }
@@ -205,6 +227,18 @@ fun BottomItem(navController: NavController){
            icon = {
                Icon(
                    imageVector = Icons.Rounded.CardGiftcard,
+                   contentDescription = ""
+               )
+           })
+       NavigationBarItem(
+           selected = route == ScreenRoute.Donate.route,
+           onClick = {
+               route = ScreenRoute.Donate.route;navController.navigate(ScreenRoute.Donate.route)
+           },
+           label = { Text(text = "Trends") },
+           icon = {
+               Icon(
+                   imageVector = Icons.Rounded.BarChart,
                    contentDescription = ""
                )
            })
