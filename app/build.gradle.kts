@@ -111,5 +111,6 @@ dependencies {
     implementation("io.coil-kt:coil-video:2.5.0")
     implementation("io.getstream:stream-log:1.1.4")
     implementation("io.getstream:stream-log-android:1.1.4")
+    implementation("com.google.ai.client.generativeai:generativeai:0.4.0")
 
 }

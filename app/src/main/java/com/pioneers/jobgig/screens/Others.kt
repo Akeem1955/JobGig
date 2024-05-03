@@ -626,13 +626,6 @@ fun VocationalDashboard(navController: NavController, viewmodel: DashboardViewmo
                    }
                    }
                    item {HomeCardView(type = HomeCardViews.Courses, navController = navController, route =ScreenRoute.HomeScreenCourse.route ) }
-                   item {
-                       HomeCardView(
-                           type = HomeCardViews.VocaSage,
-                           navController = navController,
-                           route = ScreenRoute.HomeScreenCourse.route
-                       )
-                   }
 
                    item { Spacer(modifier = Modifier.height(16.dp)) }
                }

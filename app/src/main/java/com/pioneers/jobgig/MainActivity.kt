@@ -27,11 +27,9 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.Firebase
-import com.google.firebase.appcheck.appCheck
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.toObject
-import com.google.firebase.initialize
 import com.pioneers.jobgig.dataobj.utils.User
 import com.pioneers.jobgig.screens.ScreenNav
 import com.pioneers.jobgig.screens.ScreenRoute
@@ -58,7 +56,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
        NotificationManagerCompat.from(applicationContext).cancel(1957)
-        installSplashScreen().setKeepOnScreenCondition(){keep}
+        installSplashScreen().setKeepOnScreenCondition {keep}
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.light(scrim = android.graphics.Color.TRANSPARENT, darkScrim = android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.light(scrim = android.graphics.Color.TRANSPARENT, darkScrim = android.graphics.Color.TRANSPARENT)
@@ -225,6 +223,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
 }
 
 @Composable

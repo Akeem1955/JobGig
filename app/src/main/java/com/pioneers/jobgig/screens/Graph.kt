@@ -24,6 +24,7 @@ import com.pioneers.jobgig.viewmodels.DashboardViewmodel
 import com.pioneers.jobgig.viewmodels.DonateViewModel
 import com.pioneers.jobgig.viewmodels.OnBoardViewModel
 import com.pioneers.jobgig.viewmodels.ProfileViewmodel
+import com.pioneers.jobgig.viewmodels.TrendModel
 import com.pioneers.jobgig.viewmodels.TutCreate
 import com.pioneers.jobgig.viewmodels.VocConnectViewModel
 import com.pioneers.jobgig.viewmodels.VocViewmodel
@@ -172,6 +173,10 @@ fun ScreenNav(navHostController: NavHostController,start:String){
         composable(route = ScreenRoute.DonateWhy.route){
             DonateWhy(navController = navHostController)
         }
+        composable(route = ScreenRoute.VocaSage.route) {
+            ChatScreen()
+        }
+
         composable(route = ScreenRoute.DonateGive.route,arguments = listOf(
             navArgument(name = "type"){
                 type = NavType.StringType
@@ -216,6 +221,10 @@ fun ScreenNavMain(mainnav:NavHostController,navHostController: NavHostController
         }
         composable(route = ScreenRoute.Donate.route){
             Donate(navController = mainnav)
+        }
+        composable(route = ScreenRoute.Trends.route) {
+            val model: TrendModel = viewModel()
+            TrendScreen(model)
         }
 
     }

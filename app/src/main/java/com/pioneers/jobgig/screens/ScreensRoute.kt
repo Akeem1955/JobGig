@@ -1,33 +1,38 @@
 package com.pioneers.jobgig.screens
 
 sealed class ScreenRoute(var route: String){
-    object  GetStarted: ScreenRoute("getStarted")
+    data object GetStarted : ScreenRoute("getStarted")
     object  Login: ScreenRoute("login")
     object  ForgetPassword: ScreenRoute("forget_password")
-    object  Signup: ScreenRoute("signup")
+    data object Signup : ScreenRoute("signup")
     object  Auth:ScreenRoute("auth")
     object  HomeEntry:ScreenRoute("home")
     object  Main:ScreenRoute("main")
+    object VocaSage : ScreenRoute("vocasage")
+    object Trends : ScreenRoute("trends")
     object  HomeScreenCourse:ScreenRoute("home_online_course")
     object  SearchCourse:ScreenRoute("searchCourses")
-    object  SearchCourseResult:ScreenRoute("searchCoursesResult/{query}"){
+    data object SearchCourseResult : ScreenRoute("searchCoursesResult/{query}") {
         fun query(query:String): String {
             return "searchCoursesResult/$query"
         }
     }
-    object  AllCategory:ScreenRoute("all_category")
-    object  AllPopular:ScreenRoute("all_popular")
-    object  EnrollPreview:ScreenRoute("enrollPreview/{index}/{type}"){
+
+    data object AllCategory : ScreenRoute("all_category")
+    data object AllPopular : ScreenRoute("all_popular")
+    data object EnrollPreview : ScreenRoute("enrollPreview/{index}/{type}") {
         fun enrollIndex(position:Int,type:String): String {
             return "enrollPreview/$position/$type"
         }
     }
-    object CourseScreen:ScreenRoute("course_screen/{position}/{type}"){
+
+    data object CourseScreen : ScreenRoute("course_screen/{position}/{type}") {
         fun courseArgs(type: String, position: Int): String {
             return "course_screen/$position/$type"
         }
     }
-    object EnrolledConfirmed:ScreenRoute("enrolled_sucess/{position}/{type}"){
+
+    data object EnrolledConfirmed : ScreenRoute("enrolled_sucess/{position}/{type}") {
         fun enrollIndex(position:Int,type:String): String {
             return "enrolled_sucess/$position/$type"
         }
@@ -42,7 +47,7 @@ sealed class ScreenRoute(var route: String){
     object ServiceSearch:ScreenRoute("service_search")
     object ServiceVocOnline:ScreenRoute("service_voc_online")
     object ServiceVocInfo:ScreenRoute("service_voc_info")
-    object ServiceSession:ScreenRoute("service_session")
+    data object ServiceSession : ScreenRoute("service_session")
     object ServiceChat:ScreenRoute("service_chat")
     object ServiceRate:ScreenRoute("service_rate")
 

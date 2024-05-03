@@ -1,5 +1,6 @@
 package com.pioneers.jobgig.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,13 +13,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
 import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.CardGiftcard
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.SpaceDashboard
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,7 +45,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -53,17 +56,11 @@ import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.firestore
 import com.google.firebase.ktx.Firebase
 import com.pioneers.jobgig.R
-import com.pioneers.jobgig.dataobj.utils.Trends
-import com.pioneers.jobgig.dataobj.utils.trendData
 import com.pioneers.jobgig.sealed.HomeCardViews
+import com.pioneers.jobgig.viewmodels.FeedBackModel
 import com.pioneers.jobgig.viewmodels.OnBoardViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 
 @Composable
@@ -158,18 +155,11 @@ fun HomeScreen(navController: NavController){
                         item { HomeCardView(type = HomeCardViews.Courses, navController = navController, ScreenRoute.HomeScreenCourse.route ) }
                     }
                     item {
-                        val scope = CoroutineScope(Dispatchers.IO)
-                        Button(onClick = {
-                            scope.launch {
-                                val db = com.google.firebase.Firebase.firestore.collection("Trends")
-                                    .add(Trends(trendData)).await()
-                                val dbs = com.google.firebase.Firebase.firestore
-                                    .collection("Trends")
-                                    .document("Sentiment")
-                            }
-                        }) {
-                            Text(text = "Click")
-                        }
+                        HomeCardView(
+                            type = HomeCardViews.VocaSage,
+                            navController = navController,
+                            route = ScreenRoute.VocaSage.route
+                        )
                     }
                 }
             }
@@ -179,8 +169,24 @@ fun HomeScreen(navController: NavController){
 
 @Composable
 fun HomeContainer(navController: NavHostController) {
+    val feedbackModel: FeedBackModel = viewModel()
     val mainNav = rememberNavController()
     val headColor =colorResource(id = R.color.btn)
+    val goBack = rememberSaveable {
+        mutableStateOf(navController.previousBackStackEntry == null)
+    }
+    BackHandler(enabled = goBack.value) {
+        if (!feedbackModel.feedbackShowed.value) {
+            feedbackModel.showFeedbackDialog.value = true
+        }
+        println("Prevented")
+        goBack.value = false
+    }
+    if (feedbackModel.showFeedbackDialog.value) {
+        Dialog(onDismissRequest = { /*TODO*/ }) {
+            FeedBackDialog(feedbackModel)
+        }
+    }
 
     Scaffold(containerColor = headColor, bottomBar = { BottomItem(mainNav)}) {
         ScreenNavMain(mainnav = navController,navHostController = mainNav, modifier = Modifier
@@ -233,7 +239,7 @@ fun BottomItem(navController: NavController){
        NavigationBarItem(
            selected = route == ScreenRoute.Donate.route,
            onClick = {
-               route = ScreenRoute.Donate.route;navController.navigate(ScreenRoute.Donate.route)
+               route = ScreenRoute.Trends.route;navController.navigate(ScreenRoute.Trends.route)
            },
            label = { Text(text = "Trends") },
            icon = {
