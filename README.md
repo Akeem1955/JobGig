@@ -22,6 +22,7 @@ To ensure smooth building and running of the code, we have included the Gradle b
 
 ```
 maps_api_key={Your Google Cloud API key}
+gemini_key = {Your Gemini Api Key}
 ```
 
 This straightforward process will enable the integration of Google Maps functionality into the application seamlessly.
